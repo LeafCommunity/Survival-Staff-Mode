@@ -156,7 +156,7 @@
 							<pattern>community.leaf</pattern>
 							<shadedPattern>${shade.relocation}.community.leaf</shadedPattern>
 							<excludes>
-								<exclude>community.leaf.survivalstaffmode.*</exclude>
+								<exclude>community.leaf.survival.*</exclude>
 							</excludes>
 						</relocation>
 						<relocation>

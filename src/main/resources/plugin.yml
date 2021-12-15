@@ -1,4 +1,4 @@
-main: community.leaf.survival.staffmode
+main: community.leaf.survival.staffmode.StaffModePlugin
 name: ${project.name}
 version: ${project.version}
 api-version: 1.13
