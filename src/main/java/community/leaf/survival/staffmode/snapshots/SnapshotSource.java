@@ -7,9 +7,11 @@
  */
 package community.leaf.survival.staffmode.snapshots;
 
-public interface Snapshot
+import community.leaf.configvalues.bukkit.YamlAccessor;
+
+public interface SnapshotSource<S> extends YamlAccessor<S>
 {
-	void apply(SnapshotContext context);
+	default boolean isApplicable(SnapshotContext context) { return true; }
 	
-	interface DoNotRegister extends Snapshot {}
+	S capture(SnapshotContext context);
 }

@@ -8,7 +8,6 @@
 package community.leaf.survival.staffmode.snapshots;
 
 import com.rezzedup.util.valuables.Adapter;
-import community.leaf.configvalues.bukkit.YamlAccessor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -18,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class PotionEffectsSnapshot implements Snapshot
+public record PotionEffectsSnapshot(List<PotionEffect> effects) implements Snapshot
 {
 	private static final Adapter<Map<String, Object>, PotionEffect> POTION_EFFECT =
 		Adapter.of(
@@ -29,11 +28,12 @@ public class PotionEffectsSnapshot implements Snapshot
 			effect -> Optional.of(effect.serialize())
 		);
 	
-	public static final PotionEffectsSnapshot EMPTY = new PotionEffectsSnapshot(List.of());
-	
-	public static final YamlAccessor<PotionEffectsSnapshot> YAML =
-		new YamlAccessor<>()
+	public static final SnapshotSource<PotionEffectsSnapshot> SOURCE =
+		new SnapshotSource<>()
 		{
+			@Override
+			public PotionEffectsSnapshot capture(SnapshotContext context) { return of(context.player()); }
+			
 			@SuppressWarnings("unchecked")
 			@Override
 			public Optional<PotionEffectsSnapshot> get(ConfigurationSection storage, String key)
@@ -59,12 +59,12 @@ public class PotionEffectsSnapshot implements Snapshot
 			}
 		};
 	
+	public static final PotionEffectsSnapshot EMPTY = new PotionEffectsSnapshot(List.of());
+	
 	public static PotionEffectsSnapshot of(Player player)
 	{
 		return new PotionEffectsSnapshot(List.copyOf(player.getActivePotionEffects()));
 	}
-	
-	private final List<PotionEffect> effects;
 	
 	public PotionEffectsSnapshot(List<PotionEffect> effects)
 	{
@@ -72,12 +72,12 @@ public class PotionEffectsSnapshot implements Snapshot
 	}
 	
 	@Override
-	public void apply(Player player)
+	public void apply(SnapshotContext context)
 	{
-		List.copyOf(player.getActivePotionEffects()).stream()
+		List.copyOf(context.player().getActivePotionEffects()).stream()
 			.map(PotionEffect::getType)
-			.forEach(player::removePotionEffect);
+			.forEach(context.player()::removePotionEffect);
 		
-		player.addPotionEffects(effects);
+		context.player().addPotionEffects(effects());
 	}
 }

@@ -7,8 +7,12 @@
  */
 package community.leaf.survival.staffmode.commands;
 
+import community.leaf.survival.staffmode.Mode;
 import community.leaf.survival.staffmode.StaffModePlugin;
-import community.leaf.survival.staffmode.snapshots.SnapshotManager;
+import community.leaf.survival.staffmode.snapshots.GameplaySnapshot;
+import community.leaf.survival.staffmode.snapshots.SnapshotContext;
+import community.leaf.survival.staffmode.snapshots.SnapshotRegistry;
+import community.leaf.survival.staffmode.snapshots.SnapshotSource;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -21,12 +25,14 @@ import java.nio.file.Files;
 public class TestSnapshotsCommand implements CommandExecutor
 {
 	private final StaffModePlugin plugin;
-	private final SnapshotManager manager;
+	private final SnapshotRegistry registry;
+	private final SnapshotSource<GameplaySnapshot> gameplay;
 	
 	public TestSnapshotsCommand(StaffModePlugin plugin)
 	{
 		this.plugin = plugin;
-		this.manager = new SnapshotManager(plugin);
+		this.registry = new SnapshotRegistry(plugin);
+		this.gameplay = GameplaySnapshot.source(registry);
 	}
 	
 	@Override
@@ -35,7 +41,7 @@ public class TestSnapshotsCommand implements CommandExecutor
 		if (!(sender instanceof Player player)) { return false; }
 		
 		YamlConfiguration config = new YamlConfiguration();
-		manager.yaml().set(config, player.getUniqueId().toString(), manager.capture(player));
+		gameplay.set(config, player.getUniqueId().toString(), gameplay.capture(new SnapshotContext(player, Mode.STAFF)));
 		
 		try
 		{

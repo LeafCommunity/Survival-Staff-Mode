@@ -7,7 +7,6 @@
  */
 package community.leaf.survival.staffmode.snapshots;
 
-import community.leaf.configvalues.bukkit.YamlAccessor;
 import community.leaf.configvalues.bukkit.YamlValue;
 import community.leaf.configvalues.bukkit.util.Sections;
 import org.bukkit.configuration.ConfigurationSection;
@@ -26,7 +25,7 @@ import java.util.Optional;
 
 // Can't actually be a record due to defensive array cloning.
 @SuppressWarnings("ClassCanBeRecord")
-public class InventorySnapshot implements Snapshot
+public final class InventorySnapshot implements Snapshot
 {
 	private static final YamlValue<String> MAIN = YamlValue.ofString("main").maybe();
 	
@@ -34,9 +33,12 @@ public class InventorySnapshot implements Snapshot
 	
 	private static final YamlValue<String> EXTRA = YamlValue.ofString("extra").maybe();
 	
-	public static final YamlAccessor<InventorySnapshot> YAML =
-		new YamlAccessor<>()
+	public static final SnapshotSource<InventorySnapshot> SOURCE =
+		new SnapshotSource<>()
 		{
+			@Override
+			public InventorySnapshot capture(SnapshotContext context) { return of(context.player()); }
+			
 			@Override
 			public Optional<InventorySnapshot> get(ConfigurationSection storage, String key)
 			{
@@ -152,9 +154,9 @@ public class InventorySnapshot implements Snapshot
 	public @NullOr ItemStack[] extra() { return clone(extra); }
 	
 	@Override
-	public void apply(Player player)
+	public void apply(SnapshotContext context)
 	{
-		PlayerInventory inv = player.getInventory();
+		PlayerInventory inv = context.player().getInventory();
 		
 		inv.clear();
 		
@@ -162,6 +164,6 @@ public class InventorySnapshot implements Snapshot
 		inv.setArmorContents(armor());
 		inv.setExtraContents(extra());
 		
-		player.updateInventory();
+		context.player().updateInventory();
 	}
 }

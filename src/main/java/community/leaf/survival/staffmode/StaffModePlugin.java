@@ -11,6 +11,7 @@ import com.github.zafarkhaja.semver.Version;
 import community.leaf.eventful.bukkit.BukkitEventSource;
 import community.leaf.survival.staffmode.commands.TestSnapshotsCommand;
 import community.leaf.survival.staffmode.configs.StaffModeConfig;
+import community.leaf.survival.staffmode.snapshots.SnapshotRegistry;
 import community.leaf.tasks.bukkit.BukkitTaskSource;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.NamespacedKey;
@@ -32,6 +33,7 @@ public class StaffModePlugin extends JavaPlugin implements BukkitEventSource, Bu
 	private final Path backups;
 	private final Version version;
 	private final StaffModeConfig config;
+	private final SnapshotRegistry registry;
 	
 	public StaffModePlugin()
 	{
@@ -42,6 +44,7 @@ public class StaffModePlugin extends JavaPlugin implements BukkitEventSource, Bu
 		getLogger().info("Initializing v" + version);
 		
 		this.config = new StaffModeConfig(this);
+		this.registry = new SnapshotRegistry(this);
 	}
 	
 	@Override
@@ -56,6 +59,8 @@ public class StaffModePlugin extends JavaPlugin implements BukkitEventSource, Bu
 	public StaffModeConfig config() { return config; }
 	
 	public NamespacedKey key(String key) { return new NamespacedKey(this, key); }
+	
+	public SnapshotRegistry registry() { return registry; }
 	
 	@Override
 	public void onEnable()

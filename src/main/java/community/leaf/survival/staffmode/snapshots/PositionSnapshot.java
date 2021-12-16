@@ -7,7 +7,6 @@
  */
 package community.leaf.survival.staffmode.snapshots;
 
-import community.leaf.configvalues.bukkit.YamlAccessor;
 import community.leaf.survival.staffmode.util.Position;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -17,9 +16,12 @@ import java.util.Optional;
 
 public record PositionSnapshot(Position position) implements Snapshot
 {
-	public static final YamlAccessor<PositionSnapshot> YAML =
-		new YamlAccessor<>()
+	public static final SnapshotSource<PositionSnapshot> SOURCE =
+		new SnapshotSource<>()
 		{
+			@Override
+			public PositionSnapshot capture(SnapshotContext context) { return of(context.player()); }
+			
 			@Override
 			public Optional<PositionSnapshot> get(ConfigurationSection storage, String key)
 			{
@@ -39,10 +41,10 @@ public record PositionSnapshot(Position position) implements Snapshot
 	}
 	
 	@Override
-	public void apply(Player player)
+	public void apply(SnapshotContext context)
 	{
-		player.teleport(position.locationInLoadedWorld().orElseThrow(() ->
-			new IllegalStateException("Cannot teleport to unloaded world: " + position.world()
+		context.player().teleport(position().locationInLoadedWorld().orElseThrow(() ->
+			new IllegalStateException("Cannot teleport to unloaded world: " + position().world()
 		)));
 	}
 }

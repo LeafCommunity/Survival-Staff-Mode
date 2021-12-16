@@ -7,12 +7,10 @@
  */
 package community.leaf.survival.staffmode.snapshots;
 
-import community.leaf.configvalues.bukkit.YamlAccessor;
 import community.leaf.configvalues.bukkit.YamlValue;
 import community.leaf.configvalues.bukkit.util.Sections;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Player;
 import pl.tlinkowski.annotation.basic.NullOr;
 
 import java.time.Instant;
@@ -21,17 +19,34 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
-public class PlayerGameplaySnapshot implements Snapshot
+public final class GameplaySnapshot implements Snapshot.DoNotRegister
 {
 	private static final YamlValue<Instant> UPDATED = YamlValue.ofInstant("updated").maybe();
 	
-	public static YamlAccessor<PlayerGameplaySnapshot> yaml(SnapshotManager manager)
+	public static SnapshotSource<GameplaySnapshot> source(SnapshotRegistry registry)
 	{
-		return new YamlAccessor<>()
+		return new SnapshotSource<>()
 		{
 			@Override
-			public Optional<PlayerGameplaySnapshot> get(ConfigurationSection storage, String key)
+			public GameplaySnapshot capture(SnapshotContext context)
+			{
+				List<Snapshot> snapshots = registry.streamAllRegistrations()
+					.map(SnapshotRegistry.Registration::source)
+					.filter(source -> source.isApplicable(context))
+					.flatMap(source -> {
+						try { return Stream.<Snapshot>of(source.capture(context)); }
+						catch (RuntimeException e) { e.printStackTrace(); }
+						return Stream.empty();
+					})
+					.toList();
+				
+				return GameplaySnapshot.of(snapshots);
+			}
+			
+			@Override
+			public Optional<GameplaySnapshot> get(ConfigurationSection storage, String key)
 			{
 				return Sections.get(storage, key).map(data ->
 				{
@@ -48,18 +63,23 @@ public class PlayerGameplaySnapshot implements Snapshot
 						@NullOr NamespacedKey namespacedKey = NamespacedKey.fromString(sectionKey);
 						if (namespacedKey == null) { continue; }
 						
-						manager.registrationByKey(namespacedKey)
-							.flatMap(registration -> registration.yaml().get(section, sectionKey))
+						registry.registrationByKey(namespacedKey)
+							.map(SnapshotRegistry.Registration::source)
+							.flatMap(source -> {
+								try { return source.get(section, sectionKey); }
+								catch (RuntimeException e) { e.printStackTrace(); }
+								return Optional.empty();
+							})
 							.ifPresent(snapshots::add);
 					}
 					
-					return (snapshots.isEmpty()) ? null : new PlayerGameplaySnapshot(updated, snapshots);
+					return (snapshots.isEmpty()) ? null : new GameplaySnapshot(updated, snapshots);
 				});
 			}
 			
 			@SuppressWarnings("unchecked")
 			@Override
-			public void set(ConfigurationSection storage, String key, @NullOr PlayerGameplaySnapshot updated)
+			public void set(ConfigurationSection storage, String key, @NullOr GameplaySnapshot updated)
 			{
 				if (updated == null)
 				{
@@ -74,44 +94,49 @@ public class PlayerGameplaySnapshot implements Snapshot
 				
 				for (Snapshot snapshot : updated.snapshotsByType.values())
 				{
-					@NullOr Registration<Snapshot> registration =
-						(Registration<Snapshot>) manager.registrationByType(snapshot.getClass()).orElse(null);
-					
-					if (registration == null) { continue; } // TODO: throw instead of silently fail?
-					
-					registration.yaml().set(section, registration.key().toString(), snapshot);
+					registry.registrationByType(snapshot.getClass())
+						.map(registration -> (SnapshotRegistry.Registration<Snapshot>) registration)
+						.ifPresent(registration -> {
+							try { registration.source().set(section, registration.key().toString(), snapshot); }
+							catch (RuntimeException e) { e.printStackTrace(); }
+						});
 				}
 			}
 		};
 	}
 	
-	public static PlayerGameplaySnapshot of(List<Snapshot> snapshots)
+	public static GameplaySnapshot of(List<Snapshot> snapshots)
 	{
-		return new PlayerGameplaySnapshot(Instant.now(), snapshots);
+		return new GameplaySnapshot(Instant.now(), snapshots);
 	}
 	
 	private final Map<Class<? extends Snapshot>, Snapshot> snapshotsByType = new LinkedHashMap<>();
 	
 	private final Instant updated;
 	
-	public PlayerGameplaySnapshot(Instant updated, List<Snapshot> snapshots)
+	public GameplaySnapshot(Instant updated, List<Snapshot> snapshots)
 	{
 		this.updated = updated;
 		for (Snapshot snapshot : snapshots) { snapshotsByType.put(snapshot.getClass(), snapshot); }
 	}
 	
 	@Override
-	public void apply(Player player)
+	public void apply(SnapshotContext context)
 	{
 		snapshotsByType.values().forEach(snapshot ->
 		{
-			try { snapshot.apply(player); }
+			try { snapshot.apply(context); }
 			catch (RuntimeException e) { e.printStackTrace(); } // TODO: send message to player?
 		});
 	}
 	
+	public Stream<Snapshot> streamAllSnapshots()
+	{
+		return snapshotsByType.values().stream();
+	}
+	
 	@SuppressWarnings("unchecked")
-	private <S extends Snapshot> Optional<S> snapshotByType(Class<S> type)
+	public <S extends Snapshot> Optional<S> snapshotByType(Class<S> type)
 	{
 		return Optional.ofNullable((S) snapshotsByType.get(type));
 	}

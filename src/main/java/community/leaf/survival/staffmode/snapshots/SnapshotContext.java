@@ -7,9 +7,7 @@
  */
 package community.leaf.survival.staffmode.snapshots;
 
-public interface Snapshot
-{
-	void apply(SnapshotContext context);
-	
-	interface DoNotRegister extends Snapshot {}
-}
+import community.leaf.survival.staffmode.Mode;
+import org.bukkit.entity.Player;
+
+public record SnapshotContext(Player player, Mode mode) {}

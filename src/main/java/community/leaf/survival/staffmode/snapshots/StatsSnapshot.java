@@ -7,9 +7,9 @@
  */
 package community.leaf.survival.staffmode.snapshots;
 
-import community.leaf.configvalues.bukkit.YamlAccessor;
 import community.leaf.configvalues.bukkit.YamlValue;
 import community.leaf.configvalues.bukkit.util.Sections;
+import community.leaf.survival.staffmode.Mode;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import pl.tlinkowski.annotation.basic.NullOr;
@@ -28,19 +28,25 @@ public record StatsSnapshot(int level, float exp, double health, int hunger, flo
 	
 	private static final YamlValue<Float> SATURATION = YamlValue.ofFloat("saturation").maybe();
 	
-	public static final YamlAccessor<StatsSnapshot> YAML =
-		new YamlAccessor<>()
+	public static final SnapshotSource<StatsSnapshot> SOURCE =
+		new SnapshotSource<>()
 		{
+			@Override
+			public boolean isApplicable(SnapshotContext context) { return context.mode() == Mode.SURVIVAL; }
+			
+			@Override
+			public StatsSnapshot capture(SnapshotContext context) { return of(context.player()); }
+			
 			@Override
 			public Optional<StatsSnapshot> get(ConfigurationSection storage, String key)
 			{
 				return Sections.get(storage, key).map(data ->
 					new StatsSnapshot(
-						LEVEL.get(data).orElse(0),
-						EXP.get(data).orElse(0.0F),
-						HEALTH.get(data).orElse(20.0),
-						HUNGER.get(data).orElse(0),
-						SATURATION.get(data).orElse(0.0F)
+						LEVEL.get(data).orElse(HEALTHY.level),
+						EXP.get(data).orElse(HEALTHY.exp),
+						HEALTH.get(data).orElse(HEALTHY.health),
+						HUNGER.get(data).orElse(HEALTHY.hunger),
+						SATURATION.get(data).orElse(HEALTHY.saturation)
 					)
 				);
 			}
@@ -64,6 +70,8 @@ public record StatsSnapshot(int level, float exp, double health, int hunger, flo
 			}
 		};
 	
+	public static final StatsSnapshot HEALTHY = new StatsSnapshot(0, 0.0F, 20.0, 20, 5F);
+	
 	public static StatsSnapshot of(Player player)
 	{
 		return new StatsSnapshot(
@@ -72,12 +80,12 @@ public record StatsSnapshot(int level, float exp, double health, int hunger, flo
 	}
 	
 	@Override
-	public void apply(Player player)
+	public void apply(SnapshotContext context)
 	{
-		player.setLevel(level);
-		player.setExp(exp);
-		player.setHealth(health);
-		player.setFoodLevel(hunger);
-		player.setSaturation(saturation);
+		context.player().setLevel(level);
+		context.player().setExp(exp);
+		context.player().setHealth(health);
+		context.player().setFoodLevel(hunger);
+		context.player().setSaturation(saturation);
 	}
 }
