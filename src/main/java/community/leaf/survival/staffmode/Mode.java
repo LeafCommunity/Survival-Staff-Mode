@@ -9,6 +9,6 @@ package community.leaf.survival.staffmode;
 
 public enum Mode
 {
-	PLAYER,
+	SURVIVAL,
 	STAFF;
 }

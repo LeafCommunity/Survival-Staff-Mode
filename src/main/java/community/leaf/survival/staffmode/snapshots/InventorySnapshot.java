@@ -156,8 +156,12 @@ public class InventorySnapshot implements Snapshot
 	{
 		PlayerInventory inv = player.getInventory();
 		
+		inv.clear();
+		
 		inv.setContents(main());
 		inv.setArmorContents(armor());
 		inv.setExtraContents(extra());
+		
+		player.updateInventory();
 	}
 }

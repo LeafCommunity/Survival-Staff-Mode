@@ -12,6 +12,7 @@ import community.leaf.eventful.bukkit.BukkitEventSource;
 import community.leaf.survival.staffmode.configs.StaffModeConfig;
 import community.leaf.tasks.bukkit.BukkitTaskSource;
 import org.bstats.bukkit.Metrics;
+import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -47,6 +48,8 @@ public class StaffModePlugin extends JavaPlugin implements BukkitEventSource, Bu
 	public Version version() { return version; }
 	
 	public StaffModeConfig config() { return config; }
+	
+	public NamespacedKey key(String key) { return new NamespacedKey(this, key); }
 	
 	@Override
 	public void onEnable()

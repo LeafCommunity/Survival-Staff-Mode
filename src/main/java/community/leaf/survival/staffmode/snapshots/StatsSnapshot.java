@@ -67,7 +67,7 @@ public record StatsSnapshot(int level, float exp, double health, int hunger, flo
 	public static StatsSnapshot of(Player player)
 	{
 		return new StatsSnapshot(
-		player.getLevel(), player.getExp(), player.getHealth(), player.getFoodLevel(), player.getSaturation()
+			player.getLevel(), player.getExp(), player.getHealth(), player.getFoodLevel(), player.getSaturation()
 		);
 	}
 	
