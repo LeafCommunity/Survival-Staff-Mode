@@ -8,6 +8,10 @@
 package community.leaf.survival.staffmode.snapshots;
 
 import community.leaf.survival.staffmode.StaffModePlugin;
+import community.leaf.survival.staffmode.snapshots.defaults.InventorySnapshot;
+import community.leaf.survival.staffmode.snapshots.defaults.PositionSnapshot;
+import community.leaf.survival.staffmode.snapshots.defaults.PotionEffectsSnapshot;
+import community.leaf.survival.staffmode.snapshots.defaults.StatsSnapshot;
 import org.bukkit.NamespacedKey;
 
 import java.util.LinkedHashMap;

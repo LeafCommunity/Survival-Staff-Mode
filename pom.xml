@@ -66,6 +66,10 @@
 	</repositories>
 
 	<dependencies>
+		<!-- ~ ~ ~ ~ ~ -->
+		<!-- LIBRARIES -->
+		<!-- ~ ~ ~ ~ ~ -->
+
 		<!-- Spigot API (via spigot-repo) -->
 		<dependency>
 			<groupId>org.spigotmc</groupId>
@@ -73,11 +77,30 @@
 			<version>1.18.1-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
+		<!-- Nullness Annotations: @NullOr (via maven-central) -->
+		<dependency>
+			<groupId>pl.tlinkowski.annotation</groupId>
+			<artifactId>pl.tlinkowski.annotation.basic</artifactId>
+			<version>0.2.0</version>
+			<!-- Note: scope must be visible to dependent projects otherwise nullness annotations will not work as intended -->
+		</dependency>
+
+		<!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+		<!-- SHADED DEPENDENCIES -->
+		<!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+
 		<!-- bStats (via maven-central) -->
 		<dependency>
 			<groupId>org.bstats</groupId>
 			<artifactId>bstats-bukkit</artifactId>
 			<version>2.2.1</version>
+		</dependency>
+		<!-- Java SemVer (via maven-central) -->
+		<!-- https://github.com/zafarkhaja/jsemver -->
+		<dependency>
+			<groupId>com.github.zafarkhaja</groupId>
+			<artifactId>java-semver</artifactId>
+			<version>0.9.0</version>
 		</dependency>
 		<!-- LeafCommunity ConfigValues (via jitpack.io) -->
 		<dependency>
@@ -103,19 +126,17 @@
 			<artifactId>tasks-bukkit</artifactId>
 			<version>0.0.1</version>
 		</dependency>
-		<!-- Java SemVer (via maven-central) -->
-		<!-- https://github.com/zafarkhaja/jsemver -->
+
+		<!-- ~ ~ ~ -->
+		<!-- HOOKS -->
+		<!-- ~ ~ ~ -->
+
+		<!-- Dynmap Core API (via jitpack.io) -->
 		<dependency>
-			<groupId>com.github.zafarkhaja</groupId>
-			<artifactId>java-semver</artifactId>
-			<version>0.9.0</version>
-		</dependency>
-		<!-- Nullness Annotations: @NullOr (via maven-central) -->
-		<dependency>
-			<groupId>pl.tlinkowski.annotation</groupId>
-			<artifactId>pl.tlinkowski.annotation.basic</artifactId>
-			<version>0.2.0</version>
-			<!-- Note: scope must be visible to dependent projects otherwise nullness annotations will not work as intended -->
+			<groupId>com.github.webbukkit</groupId>
+			<artifactId>dynmapcoreapi</artifactId>
+			<version>v2.5</version>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 

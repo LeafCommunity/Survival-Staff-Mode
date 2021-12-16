@@ -5,8 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package community.leaf.survival.staffmode.snapshots;
+package community.leaf.survival.staffmode.snapshots.defaults;
 
+import community.leaf.survival.staffmode.snapshots.Snapshot;
+import community.leaf.survival.staffmode.snapshots.SnapshotContext;
+import community.leaf.survival.staffmode.snapshots.SnapshotSource;
 import community.leaf.survival.staffmode.util.Position;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;

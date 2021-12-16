@@ -7,11 +7,7 @@
  */
 package community.leaf.survival.staffmode;
 
-import org.bukkit.entity.Player;
-
-import java.util.Optional;
-
-public class StaffModeManager
+public class StaffManager
 {
 
 }
