@@ -9,14 +9,20 @@ package community.leaf.survival.staffmode;
 
 import com.github.zafarkhaja.semver.Version;
 import community.leaf.eventful.bukkit.BukkitEventSource;
+import community.leaf.survival.staffmode.commands.TestSnapshotsCommand;
 import community.leaf.survival.staffmode.configs.StaffModeConfig;
 import community.leaf.tasks.bukkit.BukkitTaskSource;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.NamespacedKey;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import pl.tlinkowski.annotation.basic.NullOr;
 
 import java.nio.file.Path;
+import java.util.function.Consumer;
 
 public class StaffModePlugin extends JavaPlugin implements BukkitEventSource, BukkitTaskSource
 {
@@ -59,5 +65,17 @@ public class StaffModePlugin extends JavaPlugin implements BukkitEventSource, Bu
 			Metrics metrics = new Metrics(this, BSTATS);
 			// TODO: add more charts
 		}
+		
+		getLogger().warning("ADDING TEST COMMANDS!");
+		command("test-snapshots", new TestSnapshotsCommand(this));
+	}
+	
+	private void command(String name, CommandExecutor executor)
+	{
+		@NullOr PluginCommand command = getCommand(name);
+		if (command == null) { throw new IllegalArgumentException("Undefined command: " + name); }
+		
+		command.setExecutor(executor);
+		if (executor instanceof TabCompleter tab) { command.setTabCompleter(tab); }
 	}
 }

@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class PotionsSnapshot implements Snapshot
+public class PotionEffectsSnapshot implements Snapshot
 {
 	private static final Adapter<Map<String, Object>, PotionEffect> POTION_EFFECT =
 		Adapter.of(
@@ -29,20 +29,20 @@ public class PotionsSnapshot implements Snapshot
 			effect -> Optional.of(effect.serialize())
 		);
 	
-	public static final PotionsSnapshot EMPTY = new PotionsSnapshot(List.of());
+	public static final PotionEffectsSnapshot EMPTY = new PotionEffectsSnapshot(List.of());
 	
-	public static final YamlAccessor<PotionsSnapshot> YAML =
+	public static final YamlAccessor<PotionEffectsSnapshot> YAML =
 		new YamlAccessor<>()
 		{
 			@SuppressWarnings("unchecked")
 			@Override
-			public Optional<PotionsSnapshot> get(ConfigurationSection storage, String key)
+			public Optional<PotionEffectsSnapshot> get(ConfigurationSection storage, String key)
 			{
 				List<Map<?, ?>> data = storage.getMapList(key);
 				
 				return (data.isEmpty())
 					? Optional.of(EMPTY)
-				   	: Optional.of(new PotionsSnapshot(
+				   	: Optional.of(new PotionEffectsSnapshot(
 						data.stream()
 							.map(map -> (Map<String, Object>) map)
 							.map(POTION_EFFECT::deserialize)
@@ -52,21 +52,21 @@ public class PotionsSnapshot implements Snapshot
 			}
 			
 			@Override
-			public void set(ConfigurationSection storage, String key, @NullOr PotionsSnapshot updated)
+			public void set(ConfigurationSection storage, String key, @NullOr PotionEffectsSnapshot updated)
 			{
 				if (updated == null || updated.effects.isEmpty()) { storage.set(key, null); }
 				else { storage.set(key, updated.effects.stream().map(PotionEffect::serialize).toList()); }
 			}
 		};
 	
-	public static PotionsSnapshot of(Player player)
+	public static PotionEffectsSnapshot of(Player player)
 	{
-		return new PotionsSnapshot(List.copyOf(player.getActivePotionEffects()));
+		return new PotionEffectsSnapshot(List.copyOf(player.getActivePotionEffects()));
 	}
 	
 	private final List<PotionEffect> effects;
 	
-	public PotionsSnapshot(List<PotionEffect> effects)
+	public PotionEffectsSnapshot(List<PotionEffect> effects)
 	{
 		this.effects = List.copyOf(effects);
 	}

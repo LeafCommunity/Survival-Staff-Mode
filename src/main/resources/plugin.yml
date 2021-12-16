@@ -5,3 +5,7 @@ api-version: 1.13
 
 author: RezzedUp
 description: ${project.description}
+
+commands:
+  test-snapshots:
+    permission: survivalstaffmode.debug

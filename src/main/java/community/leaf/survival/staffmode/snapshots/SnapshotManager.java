@@ -34,7 +34,7 @@ public class SnapshotManager
 		register(StatsSnapshot.class, plugin.key("stats"), StatsSnapshot.YAML, StatsSnapshot::of);
 		register(PositionSnapshot.class, plugin.key("position"), PositionSnapshot.YAML, PositionSnapshot::of);
 		register(InventorySnapshot.class, plugin.key("inventory"), InventorySnapshot.YAML, InventorySnapshot::of);
-		register(PotionsSnapshot.class, plugin.key("potion-effects"), PotionsSnapshot.YAML, PotionsSnapshot::of);
+		register(PotionEffectsSnapshot.class, plugin.key("potion-effects"), PotionEffectsSnapshot.YAML, PotionEffectsSnapshot::of);
 	}
 	
 	public <S extends Snapshot> void register(Class<S> type, NamespacedKey key, YamlAccessor<S> yaml, Function<Player, S> constructor)
