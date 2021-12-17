@@ -41,6 +41,8 @@ public final class StaffModeProfile implements StaffMember
 	@Override
 	public Mode mode()
 	{
+		if (player().filter(Permissions.STAFF_MODE_ENABLED::allows).isPresent()) { return Mode.STAFF; }
+		
 		return META_MODE.get(profileDataSection())
 			.flatMap(Mode.adapter()::deserialize)
 			.orElse(Mode.SURVIVAL);

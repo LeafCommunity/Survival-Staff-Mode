@@ -241,6 +241,7 @@
 								<exclude>*.txt</exclude>
 								<exclude>*.xml</exclude>
 								<exclude>*.yml</exclude>
+								<exclude>.editorconfig</exclude>
 								<exclude>.run/**</exclude>
 								<exclude>examples/**</exclude>
 								<exclude>src/test/resources/**</exclude>
