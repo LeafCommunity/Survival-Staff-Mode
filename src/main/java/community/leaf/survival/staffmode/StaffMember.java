@@ -7,6 +7,7 @@
  */
 package community.leaf.survival.staffmode;
 
+import community.leaf.survival.staffmode.snapshots.GameplaySnapshot;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -23,9 +24,15 @@ public interface StaffMember
 	
 	default Optional<Player> player() { return Optional.ofNullable(Bukkit.getPlayer(uuid())); }
 	
-	Mode mode();
-	
 	Optional<Instant> sinceLastToggle();
+	
+	Optional<Mode> lastToggledMode();
+	
+	Optional<GameplaySnapshot> capture();
+	
+	Optional<GameplaySnapshot> snapshot(Mode mode);
+	
+	Mode activeMode();
 	
 	void mode(Mode mode);
 }

@@ -109,7 +109,7 @@ public final class GameplaySnapshot implements Snapshot.DoNotRegister
 	}
 	
 	// A reset state, almost as if respawning:
-	public static final GameplaySnapshot RESET = of(List.of(
+	public static final GameplaySnapshot RESPAWN = of(List.of(
 		StatsSnapshot.HEALTHY, InventorySnapshot.EMPTY, PotionEffectsSnapshot.EMPTY
 	));
 	

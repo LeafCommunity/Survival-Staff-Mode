@@ -27,56 +27,70 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 {
 	private static final String PROFILES_PATH = "survival-staff-mode.profiles";
 	
-	record Dependencies(StaffModePlugin plugin, StaffModeManager manager, SnapshotSource<GameplaySnapshot> snapshot)
-	{
-		ConfigurationSection profilesDataSection() { return Sections.getOrCreate(manager.data(), PROFILES_PATH); }
-		
-		ConfigurationSection profileDataSection(UUID uuid) { return Sections.getOrCreate(profilesDataSection(), uuid.toString()); }
-	}
-	
 	private final Map<UUID, StaffModeProfile> profilesByUuid = new HashMap<>();
 	
-	private final Dependencies core;
+	private final StaffModePlugin plugin;
+	private final SnapshotSource<GameplaySnapshot> snapshot;
+	private final StaffModeProfile.Dependencies dependencies;
 	
 	StaffModeManager(StaffModePlugin plugin)
 	{
 		super(plugin.directory().resolve("data"), "survival-staff-mode.data.yml");
-		this.core = new Dependencies(plugin, this, GameplaySnapshot.source(plugin.snapshots()));
+		
+		this.plugin = plugin;
+		this.snapshot = GameplaySnapshot.source(plugin.snapshots());
+		
+		this.dependencies = new StaffModeProfile.Dependencies()
+		{
+			@Override
+			public void updated() { StaffModeManager.this.updated(true); }
+			
+			@Override
+			public SnapshotSource<GameplaySnapshot> snapshot() { return snapshot; }
+			
+			@Override
+			public ConfigurationSection profileDataSection(UUID uuid)
+			{
+				return Sections.getOrCreate(profilesDataSection(), uuid.toString());
+			}
+		};
 	}
 	
 	void loadDataFromDisk()
 	{
 		reloadsWith(() ->
 		{
-			Logger logger = core.plugin.getLogger();;
+			Logger logger = plugin.getLogger();;
 			
 			if (isInvalid())
 			{
 				logger.log(Level.SEVERE, "Unable to load data", getInvalidReason());
 				logger.log(Level.SEVERE, "Saving data backup just in case...");
 				
-				backupThenSave(core.plugin.backups(), "error");
+				backupThenSave(plugin.backups(), "error");
 				return;
 			}
 			
 			profilesByUuid.clear();
 			
-			for (String uuid : core.profilesDataSection().getKeys(false))
+			for (String uuid : profilesDataSection().getKeys(false))
 			{
 				Adapter.ofString().intoUuid().deserialize(uuid).ifPresent(this::existingProfile);
 			}
 		});
 	}
 	
+	private ConfigurationSection profilesDataSection() { return Sections.getOrCreate(data(), PROFILES_PATH); }
+	
 	public @NullOr StaffModeProfile existingProfile(UUID uuid)
 	{
 		@NullOr StaffModeProfile existing = profilesByUuid.get(uuid);
 		if (existing != null) { return existing; }
 		
-		@NullOr ConfigurationSection section = Sections.get(core.profilesDataSection(), uuid.toString()).orElse(null);
+		@NullOr ConfigurationSection section = Sections.get(profilesDataSection(), uuid.toString()).orElse(null);
 		if (section == null) { return null; }
 		
-		StaffModeProfile profile = new StaffModeProfile(core, uuid);
+		StaffModeProfile profile = new StaffModeProfile(dependencies, uuid);
 		profilesByUuid.put(uuid, profile);
 		return profile;
 	}
@@ -90,7 +104,7 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 		
 		if (Permissions.STAFF_MEMBER.denies(player)) { return null; }
 		
-		StaffModeProfile profile = new StaffModeProfile(core, uuid);
+		StaffModeProfile profile = new StaffModeProfile(dependencies, uuid);
 		profilesByUuid.put(uuid, profile);
 		return profile;
 	}
