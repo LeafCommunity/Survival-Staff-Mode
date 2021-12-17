@@ -104,15 +104,19 @@ public final class StaffModeProfile implements StaffMember
 		
 		if (context == null) { return; }
 		
+		// Check whether player can toggle their staff mode (abort if cancelled)
 		if (Events.dispatcher().call(new StaffModeToggleRequestEvent(this, context)).isCancelled()) { return; }
 		
+		// Capture and save current gameplay state
+		capture();
+		
+		// Set updated mode
 		ConfigurationSection data = profileDataSection();
 		
 		META_MODE.set(data, mode.name());
 		META_TIMESTAMP.set(data, Instant.now());
 		
-		// Capture and save current gameplay state
-		capture();
+		core.updated();
 		
 		// Restore toggled mode's gameplay state
 		@NullOr GameplaySnapshot restored = snapshot(mode).orElse(null);
@@ -120,8 +124,7 @@ public final class StaffModeProfile implements StaffMember
 		if (restored != null) { restored.apply(context); }
 		else if (mode == Mode.STAFF) { GameplaySnapshot.RESPAWN.apply(context); }
 		
-		core.updated();
-		
+		// Dispatch enable/disable event
 		Event event = switch (mode) {
 			case STAFF -> new StaffModeEnableEvent(this, context);
 			case SURVIVAL -> new StaffModeDisableEvent(this, context);

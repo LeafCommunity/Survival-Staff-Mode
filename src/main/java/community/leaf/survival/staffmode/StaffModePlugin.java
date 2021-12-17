@@ -9,9 +9,11 @@ package community.leaf.survival.staffmode;
 
 import com.github.zafarkhaja.semver.Version;
 import community.leaf.eventful.bukkit.BukkitEventSource;
-import community.leaf.survival.staffmode.commands.TestSnapshotsCommand;
+import community.leaf.survival.staffmode.commands.StaffModeCommand;
 import community.leaf.survival.staffmode.configs.StaffModeConfig;
+import community.leaf.survival.staffmode.listeners.StaffSessionListener;
 import community.leaf.survival.staffmode.snapshots.SnapshotRegistry;
+import community.leaf.tasks.Concurrency;
 import community.leaf.tasks.bukkit.BukkitTaskSource;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.NamespacedKey;
@@ -66,21 +68,28 @@ public final class StaffModePlugin extends JavaPlugin implements BukkitEventSour
 	public SnapshotRegistry snapshots() { return snapshots; }
 	
 	@Override
-	public StaffManager staff() { return staff; }
+	public StaffModeManager staff() { return staff; }
 	
 	@Override
 	public void onEnable()
 	{
 		staff.loadDataFromDisk();
 		
+		events().register(new StaffSessionListener(this));
+		
+		command("staffmode", new StaffModeCommand(this));
+		
 		if (config.getOrDefault(StaffModeConfig.METRICS_ENABLED))
 		{
 			Metrics metrics = new Metrics(this, BSTATS);
 			// TODO: add more charts
 		}
-		
-		getLogger().warning("ADDING TEST COMMANDS!");
-		command("test-snapshots", new TestSnapshotsCommand(this));
+	}
+	
+	@Override
+	public void onDisable()
+	{
+		staff.saveIfUpdated(Concurrency.SYNC);
 	}
 	
 	private void command(String name, CommandExecutor executor)

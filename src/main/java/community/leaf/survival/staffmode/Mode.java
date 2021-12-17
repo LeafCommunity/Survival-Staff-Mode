@@ -8,21 +8,24 @@
 package community.leaf.survival.staffmode;
 
 import com.rezzedup.util.valuables.Adapter;
+import pl.tlinkowski.annotation.basic.NullOr;
 
 public enum Mode
 {
 	SURVIVAL,
 	STAFF;
 	
-	private final Mode opposite;
+	private @NullOr Mode opposite;
 	
-	Mode()
+	public Mode toggle()
 	{
-		Mode[] values = values();
-		this.opposite = values[(ordinal() + 1) % values.length];
+		if (opposite == null)
+		{
+			Mode[] values = values();
+			opposite = values[(ordinal() + 1) % values.length];
+		}
+		return opposite;
 	}
-	
-	public Mode toggle() { return opposite; }
 	
 	private static final Adapter<String, Mode> ADAPTER = Adapter.ofString().intoEnum(Mode.class);
 	

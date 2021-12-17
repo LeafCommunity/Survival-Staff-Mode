@@ -11,9 +11,12 @@ import org.bukkit.entity.Player;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 public interface StaffManager
 {
+	Stream<StaffMember> streamOnlineStaffMembers();
+	
 	Optional<StaffMember> member(UUID uuid);
 	
 	Optional<StaffMember> member(Player player);

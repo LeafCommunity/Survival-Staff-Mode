@@ -12,16 +12,21 @@ import community.leaf.configvalues.bukkit.data.YamlDataFile;
 import community.leaf.configvalues.bukkit.util.Sections;
 import community.leaf.survival.staffmode.snapshots.GameplaySnapshot;
 import community.leaf.survival.staffmode.snapshots.SnapshotSource;
+import community.leaf.tasks.Concurrency;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import pl.tlinkowski.annotation.basic.NullOr;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 public final class StaffModeManager extends YamlDataFile implements StaffManager
 {
@@ -31,6 +36,7 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 	
 	private final StaffModePlugin plugin;
 	private final SnapshotSource<GameplaySnapshot> snapshot;
+	private final OnlineStaffMemberList online;
 	private final StaffModeProfile.Dependencies dependencies;
 	
 	StaffModeManager(StaffModePlugin plugin)
@@ -39,6 +45,7 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 		
 		this.plugin = plugin;
 		this.snapshot = GameplaySnapshot.source(plugin.snapshots());
+		this.online = new OnlineStaffMemberList(plugin);
 		
 		this.dependencies = new StaffModeProfile.Dependencies()
 		{
@@ -78,6 +85,38 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 				Adapter.ofString().intoUuid().deserialize(uuid).ifPresent(this::existingProfile);
 			}
 		});
+	}
+	
+	public void saveIfUpdated(Concurrency concurrency)
+	{
+		if (!isUpdated()) { return; }
+		
+		String output = toYamlString();
+		
+		Runnable task = () ->
+		{
+			try
+			{
+				Path path = getFilePath();
+				Files.createDirectories(path.getParent());
+				Files.writeString(path, output);
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+		};
+		
+		if (concurrency == Concurrency.ASYNC) { plugin.async().run(task); }
+		else { plugin.sync().run(task); }
+	}
+	
+	public OnlineStaffMemberList online() { return online; }
+	
+	@Override
+	public Stream<StaffMember> streamOnlineStaffMembers()
+	{
+		return online.streamOnlineStaff().map(this::member).flatMap(Optional::stream);
 	}
 	
 	private ConfigurationSection profilesDataSection() { return Sections.getOrCreate(data(), PROFILES_PATH); }
