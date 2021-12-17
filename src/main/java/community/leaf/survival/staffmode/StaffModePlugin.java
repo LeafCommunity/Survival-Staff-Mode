@@ -23,9 +23,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import pl.tlinkowski.annotation.basic.NullOr;
 
 import java.nio.file.Path;
-import java.util.function.Consumer;
 
-public class StaffModePlugin extends JavaPlugin implements BukkitEventSource, BukkitTaskSource
+public final class StaffModePlugin extends JavaPlugin implements BukkitEventSource, BukkitTaskSource, StaffModeAPI
 {
 	public static final int BSTATS = 13608;
 	
@@ -33,7 +32,8 @@ public class StaffModePlugin extends JavaPlugin implements BukkitEventSource, Bu
 	private final Path backups;
 	private final Version version;
 	private final StaffModeConfig config;
-	private final SnapshotRegistry registry;
+	private final SnapshotRegistry snapshots;
+	private final StaffModeManager staff;
 	
 	public StaffModePlugin()
 	{
@@ -44,7 +44,8 @@ public class StaffModePlugin extends JavaPlugin implements BukkitEventSource, Bu
 		getLogger().info("Initializing v" + version);
 		
 		this.config = new StaffModeConfig(this);
-		this.registry = new SnapshotRegistry(this);
+		this.snapshots = new SnapshotRegistry(this);
+		this.staff = new StaffModeManager(this);
 	}
 	
 	@Override
@@ -54,17 +55,24 @@ public class StaffModePlugin extends JavaPlugin implements BukkitEventSource, Bu
 	
 	public Path backups() { return backups; }
 	
+	@Override
 	public Version version() { return version; }
 	
 	public StaffModeConfig config() { return config; }
 	
 	public NamespacedKey key(String key) { return new NamespacedKey(this, key); }
 	
-	public SnapshotRegistry registry() { return registry; }
+	@Override
+	public SnapshotRegistry snapshots() { return snapshots; }
+	
+	@Override
+	public StaffManager staff() { return staff; }
 	
 	@Override
 	public void onEnable()
 	{
+		staff.loadDataFromDisk();
+		
 		if (config.getOrDefault(StaffModeConfig.METRICS_ENABLED))
 		{
 			Metrics metrics = new Metrics(this, BSTATS);

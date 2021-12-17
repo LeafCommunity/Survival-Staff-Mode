@@ -11,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,6 +24,8 @@ public interface StaffMember
 	default Optional<Player> player() { return Optional.ofNullable(Bukkit.getPlayer(uuid())); }
 	
 	Mode mode();
+	
+	Optional<Instant> sinceLastToggle();
 	
 	void mode(Mode mode);
 }

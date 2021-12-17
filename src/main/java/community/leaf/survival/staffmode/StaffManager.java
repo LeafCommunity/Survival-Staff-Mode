@@ -7,7 +7,14 @@
  */
 package community.leaf.survival.staffmode;
 
-public class StaffManager
-{
+import org.bukkit.entity.Player;
 
+import java.util.Optional;
+import java.util.UUID;
+
+public interface StaffManager
+{
+	Optional<StaffMember> member(UUID uuid);
+	
+	Optional<StaffMember> member(Player player);
 }

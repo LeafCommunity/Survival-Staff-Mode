@@ -9,6 +9,9 @@ package community.leaf.survival.staffmode.snapshots;
 
 import community.leaf.configvalues.bukkit.YamlValue;
 import community.leaf.configvalues.bukkit.util.Sections;
+import community.leaf.survival.staffmode.snapshots.defaults.InventorySnapshot;
+import community.leaf.survival.staffmode.snapshots.defaults.PotionEffectsSnapshot;
+import community.leaf.survival.staffmode.snapshots.defaults.StatsSnapshot;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import pl.tlinkowski.annotation.basic.NullOr;
@@ -104,6 +107,11 @@ public final class GameplaySnapshot implements Snapshot.DoNotRegister
 			}
 		};
 	}
+	
+	// A reset state, almost as if respawning:
+	public static final GameplaySnapshot RESET = of(List.of(
+		StatsSnapshot.HEALTHY, InventorySnapshot.EMPTY, PotionEffectsSnapshot.EMPTY
+	));
 	
 	public static GameplaySnapshot of(List<Snapshot> snapshots)
 	{

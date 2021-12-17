@@ -1,0 +1,102 @@
+package community.leaf.survival.staffmode;
+
+import com.rezzedup.util.valuables.Adapter;
+import community.leaf.configvalues.bukkit.data.YamlDataFile;
+import community.leaf.configvalues.bukkit.util.Sections;
+import community.leaf.survival.staffmode.snapshots.GameplaySnapshot;
+import community.leaf.survival.staffmode.snapshots.SnapshotSource;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
+import pl.tlinkowski.annotation.basic.NullOr;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public final class StaffModeManager extends YamlDataFile implements StaffManager
+{
+	private static final String PROFILES_PATH = "survival-staff-mode.profiles";
+	
+	record Dependencies(StaffModePlugin plugin, StaffModeManager manager, SnapshotSource<GameplaySnapshot> snapshot)
+	{
+		ConfigurationSection profilesDataSection() { return Sections.getOrCreate(manager.data(), PROFILES_PATH); }
+		
+		ConfigurationSection profileDataSection(UUID uuid) { return Sections.getOrCreate(profilesDataSection(), uuid.toString()); }
+	}
+	
+	private final Map<UUID, StaffModeProfile> profilesByUuid = new HashMap<>();
+	
+	private final Dependencies core;
+	
+	StaffModeManager(StaffModePlugin plugin)
+	{
+		super(plugin.directory().resolve("data"), "survival-staff-mode.data.yml");
+		this.core = new Dependencies(plugin, this, GameplaySnapshot.source(plugin.snapshots()));
+	}
+	
+	void loadDataFromDisk()
+	{
+		reloadsWith(() ->
+		{
+			Logger logger = core.plugin.getLogger();;
+			
+			if (isInvalid())
+			{
+				logger.log(Level.SEVERE, "Unable to load data", getInvalidReason());
+				logger.log(Level.SEVERE, "Saving data backup just in case...");
+				
+				backupThenSave(core.plugin.backups(), "error");
+				return;
+			}
+			
+			profilesByUuid.clear();
+			
+			for (String uuid : core.profilesDataSection().getKeys(false))
+			{
+				Adapter.ofString().intoUuid().deserialize(uuid).ifPresent(this::existingProfile);
+			}
+		});
+	}
+	
+	public @NullOr StaffModeProfile existingProfile(UUID uuid)
+	{
+		@NullOr StaffModeProfile existing = profilesByUuid.get(uuid);
+		if (existing != null) { return existing; }
+		
+		@NullOr ConfigurationSection section = Sections.get(core.profilesDataSection(), uuid.toString()).orElse(null);
+		if (section == null) { return null; }
+		
+		StaffModeProfile profile = new StaffModeProfile(core, uuid);
+		profilesByUuid.put(uuid, profile);
+		return profile;
+	}
+	
+	public @NullOr StaffModeProfile playerProfile(Player player)
+	{
+		UUID uuid = player.getUniqueId();
+		
+		@NullOr StaffModeProfile existing = existingProfile(player.getUniqueId());
+		if (existing != null) { return existing; }
+		
+		if (Permissions.STAFF_MEMBER.denies(player)) { return null; }
+		
+		StaffModeProfile profile = new StaffModeProfile(core, uuid);
+		profilesByUuid.put(uuid, profile);
+		return profile;
+	}
+	
+	@Override
+	public Optional<StaffMember> member(UUID uuid)
+	{
+		return Optional.ofNullable(existingProfile(uuid));
+	}
+	
+	@Override
+	public Optional<StaffMember> member(Player player)
+	{
+		return Optional.ofNullable(playerProfile(player));
+	}
+}

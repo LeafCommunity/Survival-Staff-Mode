@@ -80,6 +80,8 @@ public final class InventorySnapshot implements Snapshot
 			}
 		};
 	
+	public static final InventorySnapshot EMPTY = new InventorySnapshot(new ItemStack[0], new ItemStack[0], new ItemStack[0]);
+	
 	public static InventorySnapshot of(Player player)
 	{
 		PlayerInventory inv = player.getInventory();

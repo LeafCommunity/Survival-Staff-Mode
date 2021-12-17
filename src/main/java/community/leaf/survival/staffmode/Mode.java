@@ -7,8 +7,24 @@
  */
 package community.leaf.survival.staffmode;
 
+import com.rezzedup.util.valuables.Adapter;
+
 public enum Mode
 {
 	SURVIVAL,
 	STAFF;
+	
+	private final Mode opposite;
+	
+	Mode()
+	{
+		Mode[] values = values();
+		this.opposite = values[(ordinal() + 1) % values.length];
+	}
+	
+	public Mode toggle() { return opposite; }
+	
+	private static final Adapter<String, Mode> ADAPTER = Adapter.ofString().intoEnum(Mode.class);
+	
+	public static Adapter<String, Mode> adapter() { return ADAPTER; }
 }
