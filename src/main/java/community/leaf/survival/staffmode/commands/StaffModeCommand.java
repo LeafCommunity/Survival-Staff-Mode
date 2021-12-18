@@ -10,36 +10,98 @@ package community.leaf.survival.staffmode.commands;
 import com.rezzedup.util.constants.Aggregates;
 import com.rezzedup.util.constants.annotations.AggregatedResult;
 import com.rezzedup.util.constants.types.TypeCapture;
+import community.leaf.survival.staffmode.Permissions;
 import community.leaf.survival.staffmode.StaffMember;
 import community.leaf.survival.staffmode.StaffModePlugin;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import pl.tlinkowski.annotation.basic.NullOr;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.StringJoiner;
 
 public class StaffModeCommand implements CommandExecutor, TabCompleter
 {
-	public static final Set<String> TOGGLE = Set.of("toggle", "on", "off");
+	// Staff Mode Toggles
+	public static final Set<String> STAFF_TOGGLE_SWITCH = Set.of("toggle", "switch");
 	
-	public static final Set<String> RUN = Set.of("run", "then");
+	public static final Set<String> STAFF_TOGGLE_ON = Set.of("on", "enable");
 	
-	public static final Set<String> CHECK = Set.of("check");
-	
-	public static final Set<String> RELOAD = Set.of("reload");
-	
-	public static final Set<String> INFO = Set.of("info");
-	
-	public static final Set<String> USAGE = Set.of("help", "usage", "?");
+	public static final Set<String> STAFF_TOGGLE_OFF = Set.of("off", "disable");
 	
 	@AggregatedResult
-	public static final Set<String> ARGUMENTS =
-		Aggregates.set(StaffModeCommand.class, TypeCapture.type(String.class));
+	public static final Set<String> STAFF_TOGGLES =
+		Aggregates.set(
+			StaffModeCommand.class,
+			TypeCapture.type(String.class),
+			Aggregates.matching().all("TOGGLE").collections(true)
+		);
+	
+	public static final Set<String> STAFF_RUN = Set.of("run", "then");
+	
+	public static final Set<String> STAFF_CHECK = Set.of("check");
+	
+	// Staff Mode Tools
+	
+	public static final Set<String> STAFF_NIGHT_VISION_TOOL = Set.of("nightvision", "nv");
+	
+	public static final Set<String> STAFF_SPECTATE_TOOL = Set.of("spectator", "spectate", "spec");
+	
+	@AggregatedResult
+	public static final Set<String> STAFF_TOOLS =
+		Aggregates.set(
+			StaffModeCommand.class,
+			TypeCapture.type(String.class),
+			Aggregates.matching().all("TOOL").collections(true)
+		);
+	
+	// Managerial Commands
+	public static final Set<String> ADMIN_RELOAD = Set.of("reload");
+	
+	public static final Set<String> ADMIN_INFO = Set.of("info");
+	
+	// Usage
+	public static final Set<String> STAFF_USAGE = Set.of("help", "usage", "?");
+	
+	@AggregatedResult
+	public static final Set<String> ALL_STAFF_ARGUMENTS =
+		Aggregates.set(
+			StaffModeCommand.class,
+			TypeCapture.type(String.class),
+			Aggregates.matching().all("STAFF").not("ADMIN").collections(true)
+		);
+	
+	@AggregatedResult
+	public static final Set<String> ALL_ADMIN_ARGUMENTS =
+		Aggregates.set(
+			StaffModeCommand.class,
+			TypeCapture.type(String.class),
+			Aggregates.matching().all().collections(true)
+		);
+	
+	private static final Field COMMAND_MAP_FIELD;
+	
+	static
+	{
+		try
+		{
+			COMMAND_MAP_FIELD = Bukkit.getServer().getClass().getDeclaredField("commandMap");
+			COMMAND_MAP_FIELD.setAccessible(true);
+		}
+		catch (NoSuchFieldException  e)
+		{
+			throw new IllegalStateException("Server implementation is missing commandMap field", e);
+		}
+	}
 	
 	private final StaffModePlugin plugin;
 	
@@ -48,17 +110,24 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 		this.plugin = plugin;
 	}
 	
+	private CommandMap commandMap()
+	{
+		try { return (CommandMap) COMMAND_MAP_FIELD.get(plugin.getServer()); }
+		catch (IllegalAccessException e) { throw new RuntimeException(e); }
+	}
+	
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
 	{
 		String choice = (args.length >= 1) ? args[0].toLowerCase(Locale.ROOT) : "toggle";
 		
-		if (TOGGLE.contains(choice)) { return toggle(sender, args); }
-		if (RUN.contains(choice)) { return toggleThenRunCommand(sender, args); }
-		if (CHECK.contains(choice)) { return check(sender); }
-		if (RELOAD.contains(choice)) { return reload(sender); }
-		if (INFO.contains(choice)) { return info(sender); }
-		if (USAGE.contains(choice)) { return usage(sender); }
+		if (STAFF_TOGGLES.contains(choice)) { return toggle(sender, args); }
+		if (STAFF_RUN.contains(choice)) { return run(sender, args); }
+		if (STAFF_CHECK.contains(choice)) { return check(sender, args); }
+		if (STAFF_TOOLS.contains(choice)) { return tools(sender, args); }
+		if (ADMIN_RELOAD.contains(choice)) { return reload(sender); }
+		if (ADMIN_INFO.contains(choice)) { return info(sender); }
+		if (STAFF_USAGE.contains(choice)) { return usage(sender); }
 		
 		return error(sender, "Unknown argument: " + choice);
 	}
@@ -66,36 +135,40 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args)
 	{
-		List<String> result = new ArrayList<>();
-		int last = args.length - 1;
-		String lastArg = (last >= 0) ? args[last] : "";
-		String lastArgLowerCase = lastArg.toLowerCase(Locale.ROOT);
+		List<String> suggestions = new ArrayList<>();
 		
-		if (last <= 1)
+		if (args.length <= 1)
 		{
-			result.add("<Argument>");
-			result.addAll(ARGUMENTS);
+			if (Permissions.ADMIN.allows(sender)) { suggestions.addAll(ALL_ADMIN_ARGUMENTS); }
+			else { suggestions.addAll(ALL_STAFF_ARGUMENTS); }
 		}
 		else
 		{
 			String choice = args[0].toLowerCase(Locale.ROOT);
 			
-			if (RUN.contains(choice))
+			if (STAFF_RUN.contains(choice))
 			{
-				result.add("<Command>");
+				StringJoiner joiner = new StringJoiner(" ");
+				
+				for (int i = 1; i < args.length; i++)
+				{
+					joiner.add((i == 1) ? args[i].replaceFirst("/", "") : args[i]);
+				}
+				
+				plugin.getLogger().info("Tab completing: /" + joiner.toString());
+				
+				@NullOr List<String> delegated = commandMap().tabComplete(sender, joiner.toString());
+				if (delegated == null || delegated.isEmpty()) { suggestions.add("<Command>"); }
+				else { suggestions.addAll(delegated); }
 			}
 			else
 			{
-				result.add("<No more arguments>");
+				suggestions.add("<No more arguments>");
 			}
 		}
 		
-		result.removeIf(suggestion ->
-			!(suggestion.startsWith("<") || suggestion.toLowerCase(Locale.ROOT).contains(lastArgLowerCase))
-		);
-		
-		result.sort(String.CASE_INSENSITIVE_ORDER);
-		return result;
+		suggestions.sort(String.CASE_INSENSITIVE_ORDER);
+		return suggestions;
 	}
 	
 	private boolean error(CommandSender sender, String message)
@@ -115,7 +188,7 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 		return true;
 	}
 	
-	private boolean toggleThenRunCommand(CommandSender sender, String[] args)
+	private boolean run(CommandSender sender, String[] args)
 	{
 		if (!(sender instanceof Player player))
 		{
@@ -125,7 +198,12 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 		return true;
 	}
 	
-	private boolean check(CommandSender sender)
+	private boolean check(CommandSender sender, String[] args)
+	{
+		return true;
+	}
+	
+	private boolean tools(CommandSender sender, String[] args)
 	{
 		return true;
 	}

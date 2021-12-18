@@ -15,6 +15,7 @@ import community.leaf.survival.staffmode.StaffModePlugin;
 import community.leaf.survival.staffmode.StaffModeProfile;
 import community.leaf.survival.staffmode.events.StaffModeDisableEvent;
 import community.leaf.survival.staffmode.events.StaffModeEnableEvent;
+import community.leaf.survival.staffmode.snapshots.SnapshotContext;
 import community.leaf.survival.staffmode.snapshots.defaults.PotionEffectsSnapshot;
 import community.leaf.survival.staffmode.snapshots.defaults.StatsSnapshot;
 import community.leaf.tasks.Concurrency;
@@ -64,6 +65,18 @@ public class StaffSessionListener implements Listener
 		});
 	}
 	
+	private void applyStaffMode(SnapshotContext context)
+	{
+		StatsSnapshot.HEALTHY.apply(context);
+		PotionEffectsSnapshot.EMPTY.apply(context);
+		
+		context.player().setAllowFlight(true);
+		context.player().setFlying(true);
+		
+		// TODO: better message
+		context.player().sendMessage("Staff mode enabled.");
+	}
+	
 	@EventListener
 	public void onStaffJoin(PlayerJoinEvent event)
 	{
@@ -75,10 +88,10 @@ public class StaffSessionListener implements Listener
 		StaffModeProfile profile = plugin.staff().profileOfOnlineStaffMember(player);
 		profile.updateMetaData();
 		
-		if (profile.activeMode() != Mode.STAFF) { return; }
-		
-		// TODO: better message
-		event.getPlayer().sendMessage("Staff mode enabled.");
+		if (profile.activeMode() == Mode.STAFF)
+		{
+			applyStaffMode(new SnapshotContext(player, Mode.STAFF));
+		}
 	}
 	
 	@EventListener
@@ -91,19 +104,13 @@ public class StaffSessionListener implements Listener
 	@EventListener
 	public void onStaffModeEnable(StaffModeEnableEvent event)
 	{
-		event.player().sendMessage("Enabled staff mode.");
-		
-		StatsSnapshot.HEALTHY.apply(event.context());
-		PotionEffectsSnapshot.EMPTY.apply(event.context());
-		
-		event.player().setAllowFlight(true);
-		event.player().setFlying(true);
+		applyStaffMode(event.context());
 	}
 	
 	@EventListener
 	public void onStaffModeDisable(StaffModeDisableEvent event)
 	{
-		event.player().sendMessage("Disabled staff mode.");
+		event.player().sendMessage("Staff mode disabled.");
 		
 		event.player().setAllowFlight(false);
 		event.player().setFlying(false);

@@ -7,6 +7,7 @@
  */
 package community.leaf.survival.staffmode.snapshots.defaults;
 
+import community.leaf.survival.staffmode.Mode;
 import community.leaf.survival.staffmode.snapshots.Snapshot;
 import community.leaf.survival.staffmode.snapshots.SnapshotContext;
 import community.leaf.survival.staffmode.snapshots.SnapshotSource;
@@ -22,6 +23,12 @@ public record PositionSnapshot(Position position) implements Snapshot
 	public static final SnapshotSource<PositionSnapshot> SOURCE =
 		new SnapshotSource<>()
 		{
+			@Override
+			public boolean isApplicable(SnapshotContext context)
+			{
+				return context.mode() == Mode.SURVIVAL;
+			}
+			
 			@Override
 			public PositionSnapshot capture(SnapshotContext context) { return of(context.player()); }
 			

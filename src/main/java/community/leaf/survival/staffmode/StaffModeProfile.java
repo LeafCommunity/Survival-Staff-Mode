@@ -84,7 +84,13 @@ public final class StaffModeProfile implements StaffMember
 		Mode mode = activeMode();
 		GameplaySnapshot saved = core.snapshot().capture(new SnapshotContext(player, mode));
 		
-		core.snapshot().set(modesDataSection(), mode.name(), saved);
+		ConfigurationSection data = modesDataSection();
+		
+		// Delete old data first to completely overwrite the snapshot
+		data.set(mode.name(), null);
+		
+		// Save captured snapshot
+		core.snapshot().set(data, mode.name(), saved);
 		core.updated();
 		
 		return Optional.of(saved);

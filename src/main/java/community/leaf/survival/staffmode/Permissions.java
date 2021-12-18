@@ -12,7 +12,8 @@ import org.bukkit.permissions.Permissible;
 public enum Permissions
 {
 	STAFF_MEMBER("staff"),
-	STAFF_MODE_ENABLED("enabled");
+	STAFF_MODE_ENABLED("enabled"),
+	ADMIN("admin");
 	
 	private final String node;
 	

@@ -55,8 +55,13 @@ public class StaffModeInteractionListener implements Listener
 		// Allow flight if player is changing to survival mode
 		// from another gamemode *while* in staff mode.
 		// mode mode mode.
-		plugin.sync().run(() -> {
-			if (invulnerable(player)) { player.setAllowFlight(true); }
+		plugin.sync().run(() ->
+		{
+			if (invulnerable(player))
+			{
+				player.setAllowFlight(true);
+				player.setFlying(true);
+			}
 		});
 	}
 	
