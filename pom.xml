@@ -56,8 +56,8 @@
 
 	<repositories>
 		<repository>
-			<id>spigot-repo</id>
-			<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+			<id>papermc</id>
+			<url>https://papermc.io/repo/repository/maven-public/</url>
 		</repository>
 		<repository>
 			<id>jitpack.io</id>
@@ -70,10 +70,10 @@
 		<!-- LIBRARIES -->
 		<!-- ~ ~ ~ ~ ~ -->
 
-		<!-- Spigot API (via spigot-repo) -->
+		<!-- Paper API (via papermc) -->
 		<dependency>
-			<groupId>org.spigotmc</groupId>
-			<artifactId>spigot-api</artifactId>
+			<groupId>io.papermc.paper</groupId>
+			<artifactId>paper-api</artifactId>
 			<version>1.18.1-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
@@ -126,6 +126,12 @@
 			<artifactId>tasks-bukkit</artifactId>
 			<version>0.0.1</version>
 		</dependency>
+		<!-- PaperLib (via papermc) -->
+		<dependency>
+			<groupId>io.papermc</groupId>
+			<artifactId>paperlib</artifactId>
+			<version>1.0.7</version>
+		 </dependency>
 
 		<!-- ~ ~ ~ -->
 		<!-- HOOKS -->
@@ -187,6 +193,10 @@
 						<relocation>
 							<pattern>com.rezzedup.util</pattern>
 							<shadedPattern>${shade.relocation}.com.rezzedup.util</shadedPattern>
+						</relocation>
+						<relocation>
+							<pattern>io.papermc.lib</pattern>
+							<shadedPattern>${shade.relocation}.io.papermc.lib</shadedPattern>
 						</relocation>
 						<relocation>
 							<pattern>org.bstats</pattern>

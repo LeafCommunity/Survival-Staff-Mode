@@ -7,6 +7,7 @@
  */
 package community.leaf.survival.staffmode.listeners;
 
+import com.rezzedup.util.constants.types.Cast;
 import community.leaf.eventful.bukkit.annotations.EventListener;
 import community.leaf.survival.staffmode.Mode;
 import community.leaf.survival.staffmode.Permissions;
@@ -23,6 +24,9 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
+import org.bukkit.entity.Creature;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -70,11 +74,20 @@ public class StaffSessionListener implements Listener
 		StatsSnapshot.HEALTHY.apply(context);
 		PotionEffectsSnapshot.EMPTY.apply(context);
 		
-		context.player().setAllowFlight(true);
-		context.player().setFlying(true);
+		Player player = context.player();
+		
+		// Enable flight
+		player.setAllowFlight(true);
+		player.setFlying(true);
+		
+		// Clear targets of aggressive mobs since staff are immune
+		player.getNearbyEntities(256, 256, 256).stream()
+			.flatMap(entity -> Cast.as(Mob.class, entity).stream())
+			.filter(mob -> player.equals(mob.getTarget()))
+			.forEach(mob -> mob.setTarget(null));
 		
 		// TODO: better message
-		context.player().sendMessage("Staff mode enabled.");
+		player.sendMessage("Staff mode enabled.");
 	}
 	
 	@EventListener

@@ -13,13 +13,14 @@ import community.leaf.survival.staffmode.Mode;
 import community.leaf.survival.staffmode.snapshots.Snapshot;
 import community.leaf.survival.staffmode.snapshots.SnapshotContext;
 import community.leaf.survival.staffmode.snapshots.SnapshotSource;
+import org.bukkit.Statistic;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import pl.tlinkowski.annotation.basic.NullOr;
 
 import java.util.Optional;
 
-public record StatsSnapshot(int level, float exp, double health, int hunger, float saturation) implements Snapshot
+public record StatsSnapshot(int level, float exp, double health, int hunger, float saturation, int insomnia) implements Snapshot
 {
 	private static final YamlValue<Integer> LEVEL = YamlValue.ofInteger("level").maybe();
 	
@@ -30,6 +31,8 @@ public record StatsSnapshot(int level, float exp, double health, int hunger, flo
 	private static final YamlValue<Integer> HUNGER = YamlValue.ofInteger("hunger").maybe();
 	
 	private static final YamlValue<Float> SATURATION = YamlValue.ofFloat("saturation").maybe();
+	
+	private static final YamlValue<Integer> INSOMNIA = YamlValue.ofInteger("insomnia").maybe();
 	
 	public static final SnapshotSource<StatsSnapshot> SOURCE =
 		new SnapshotSource<>()
@@ -49,7 +52,8 @@ public record StatsSnapshot(int level, float exp, double health, int hunger, flo
 						EXP.get(data).orElse(HEALTHY.exp),
 						HEALTH.get(data).orElse(HEALTHY.health),
 						HUNGER.get(data).orElse(HEALTHY.hunger),
-						SATURATION.get(data).orElse(HEALTHY.saturation)
+						SATURATION.get(data).orElse(HEALTHY.saturation),
+						INSOMNIA.get(data).orElse(HEALTHY.insomnia)
 					)
 				);
 			}
@@ -70,15 +74,21 @@ public record StatsSnapshot(int level, float exp, double health, int hunger, flo
 				HEALTH.set(data, updated.health);
 				HUNGER.set(data, updated.hunger);
 				SATURATION.set(data, updated.saturation);
+				INSOMNIA.set(data, updated.insomnia);
 			}
 		};
 	
-	public static final StatsSnapshot HEALTHY = new StatsSnapshot(0, 0.0F, 20.0, 20, 5F);
+	public static final StatsSnapshot HEALTHY = new StatsSnapshot(0, 0.0F, 20.0, 20, 5F, 0);
 	
 	public static StatsSnapshot of(Player player)
 	{
 		return new StatsSnapshot(
-			player.getLevel(), player.getExp(), player.getHealth(), player.getFoodLevel(), player.getSaturation()
+			player.getLevel(),
+			player.getExp(),
+			player.getHealth(),
+			player.getFoodLevel(),
+			player.getSaturation(),
+			player.getStatistic(Statistic.TIME_SINCE_REST)
 		);
 	}
 	
@@ -90,5 +100,6 @@ public record StatsSnapshot(int level, float exp, double health, int hunger, flo
 		context.player().setHealth(health);
 		context.player().setFoodLevel(hunger);
 		context.player().setSaturation(saturation);
+		context.player().setStatistic(Statistic.TIME_SINCE_REST, insomnia);
 	}
 }

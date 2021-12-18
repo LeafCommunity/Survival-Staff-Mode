@@ -27,4 +27,9 @@ public interface StaffManager
 			new IllegalArgumentException("Player is not a staff member: " + player.getName())
 		);
 	}
+	
+	default boolean isInStaffMode(Player player)
+	{
+		return Permissions.STAFF_MEMBER.allows(player) && onlineStaffMember(player).mode() == Mode.STAFF;
+	}
 }
