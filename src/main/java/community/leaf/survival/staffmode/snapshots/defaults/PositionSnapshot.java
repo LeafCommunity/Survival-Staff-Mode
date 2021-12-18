@@ -24,10 +24,7 @@ public record PositionSnapshot(Position position) implements Snapshot
 		new SnapshotSource<>()
 		{
 			@Override
-			public boolean isApplicable(SnapshotContext context)
-			{
-				return context.mode() == Mode.SURVIVAL;
-			}
+			public boolean isApplicable(SnapshotContext context) { return context.mode() == Mode.SURVIVAL; }
 			
 			@Override
 			public PositionSnapshot capture(SnapshotContext context) { return of(context.player()); }

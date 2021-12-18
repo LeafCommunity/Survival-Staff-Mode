@@ -8,6 +8,7 @@
 package community.leaf.survival.staffmode.snapshots;
 
 import community.leaf.survival.staffmode.StaffModePlugin;
+import community.leaf.survival.staffmode.snapshots.defaults.FlightSnapshot;
 import community.leaf.survival.staffmode.snapshots.defaults.InventorySnapshot;
 import community.leaf.survival.staffmode.snapshots.defaults.PositionSnapshot;
 import community.leaf.survival.staffmode.snapshots.defaults.PotionEffectsSnapshot;
@@ -30,6 +31,7 @@ public final class SnapshotRegistry
 	{
 		// Register default types
 		register(StatsSnapshot.class, plugin.key("stats"), StatsSnapshot.SOURCE);
+		register(FlightSnapshot.class, plugin.key("flight"), FlightSnapshot.SOURCE);
 		register(PositionSnapshot.class, plugin.key("position"), PositionSnapshot.SOURCE);
 		register(InventorySnapshot.class, plugin.key("inventory"), InventorySnapshot.SOURCE);
 		register(PotionEffectsSnapshot.class, plugin.key("potion-effects"), PotionEffectsSnapshot.SOURCE);
