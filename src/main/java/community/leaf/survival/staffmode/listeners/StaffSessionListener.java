@@ -57,7 +57,7 @@ public class StaffSessionListener implements Listener
 		
 		plugin.sync().every(2).ticks().run(() -> {
 			plugin.staff().streamOnlineStaffMembers()
-				.filter(member -> member.activeMode() == Mode.STAFF)
+				.filter(member -> member.mode() == Mode.STAFF)
 				.flatMap(member -> member.player().stream())
 				.forEach(player ->
 					player.spigot().sendMessage(ChatMessageType.ACTION_BAR, notification)
@@ -88,7 +88,7 @@ public class StaffSessionListener implements Listener
 		StaffModeProfile profile = plugin.staff().profileOfOnlineStaffMember(player);
 		profile.updateMetaData();
 		
-		if (profile.activeMode() == Mode.STAFF)
+		if (profile.mode() == Mode.STAFF)
 		{
 			applyStaffMode(new SnapshotContext(player, Mode.STAFF));
 		}

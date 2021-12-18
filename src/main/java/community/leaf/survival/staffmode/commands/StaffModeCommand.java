@@ -184,7 +184,7 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 		}
 		
 		StaffMember member = plugin.staff().member(player).orElseThrow();
-		member.mode(member.activeMode().toggle());
+		member.mode(member.mode().toggle());
 		return true;
 	}
 	

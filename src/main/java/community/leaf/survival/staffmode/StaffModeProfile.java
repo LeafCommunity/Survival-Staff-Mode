@@ -22,6 +22,8 @@ import org.bukkit.event.Event;
 import pl.tlinkowski.annotation.basic.NullOr;
 
 import java.time.Instant;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -42,6 +44,8 @@ public final class StaffModeProfile implements StaffMember
 	
 	private static final YamlValue<Instant> META_TOGGLE_TIMESTAMP = YamlValue.ofInstant("meta.toggle").maybe();
 	
+	private final Map<Mode, GameplaySnapshot> snapshotsCache = new EnumMap<>(Mode.class);
+	
 	private final Dependencies core;
 	private final UUID uuid;
 	
@@ -54,6 +58,22 @@ public final class StaffModeProfile implements StaffMember
 	private ConfigurationSection profileDataSection() { return core.profileDataSection(uuid); }
 	
 	private ConfigurationSection modesDataSection() { return Sections.getOrCreate(profileDataSection(), "modes"); }
+	
+	private void validateReceivedPlayer(Player player)
+	{
+		if (!uuid.equals(player.getUniqueId()))
+		{
+			throw new IllegalArgumentException(
+				"Expected player with UUID " + uuid  + " but instead received: " +
+				player.getUniqueId() + " (" +player.getName() + ")"
+			);
+		}
+	}
+	
+	private void validateReceivedContext(SnapshotContext context)
+	{
+		validateReceivedPlayer(context.player());
+	}
 	
 	public void updateMetaData()
 	{
@@ -75,77 +95,104 @@ public final class StaffModeProfile implements StaffMember
 		return META_MODE.get(profileDataSection()).flatMap(Mode.adapter()::deserialize);
 	}
 	
-	@Override
-	public Optional<GameplaySnapshot> capture()
+	public GameplaySnapshot forceCaptureMode(SnapshotContext context)
 	{
-		@NullOr Player player = player().orElse(null);
-		if (player == null) { return Optional.empty(); }
+		validateReceivedContext(context);
 		
-		Mode mode = activeMode();
-		GameplaySnapshot saved = core.snapshot().capture(new SnapshotContext(player, mode));
-		
+		GameplaySnapshot saved = core.snapshot().capture(context);
 		ConfigurationSection data = modesDataSection();
 		
 		// Delete old data first to completely overwrite the snapshot
-		data.set(mode.name(), null);
+		data.set(context.mode().name(), null);
 		
 		// Save captured snapshot
-		core.snapshot().set(data, mode.name(), saved);
+		core.snapshot().set(data, context.mode().name(), saved);
 		core.updated();
 		
-		return Optional.of(saved);
+		// Update cached entry
+		snapshotsCache.put(context.mode(), saved);
+		
+		return saved;
+	}
+	
+	@Override
+	public Optional<GameplaySnapshot> capture()
+	{
+		return player().map(player -> forceCaptureMode(new SnapshotContext(player, effectiveActiveMode(player))));
 	}
 	
 	@Override
 	public Optional<GameplaySnapshot> snapshot(Mode mode)
 	{
-		return core.snapshot().get(modesDataSection(), mode.name());
+		@NullOr GameplaySnapshot cached = snapshotsCache.get(mode);
+		if (cached != null) { return Optional.of(cached); }
+		
+		Optional<GameplaySnapshot> existing = core.snapshot().get(modesDataSection(), mode.name());
+		existing.ifPresent(snapshot -> snapshotsCache.put(mode, snapshot));
+		return existing;
+	}
+	
+	private Mode effectiveActiveMode(Player player)
+	{
+		validateReceivedPlayer(player);
+		return (Permissions.STAFF_MODE_ENABLED.allows(player)) ? Mode.STAFF : lastToggledMode().orElse(Mode.SURVIVAL);
 	}
 	
 	@Override
-	public Mode activeMode()
+	public Mode mode()
 	{
-		if (player().filter(Permissions.STAFF_MODE_ENABLED::allows).isPresent()) { return Mode.STAFF; }
-		return lastToggledMode().orElse(Mode.SURVIVAL);
+		return player().map(this::effectiveActiveMode).orElse(Mode.SURVIVAL);
 	}
 	
-	@Override
-	public void mode(Mode mode)
+	// Restore mode without capturing snapshot first
+	public void forceRestoreMode(SnapshotContext context)
 	{
-		if (mode == activeMode()) { return; }
+		validateReceivedContext(context);
 		
-		@NullOr SnapshotContext context = player()
-			.map(player -> new SnapshotContext(player, mode))
-			.orElse(null);
-		
-		if (context == null) { return; }
-		
-		// Check whether player can toggle their staff mode (abort if cancelled)
-		if (Events.dispatcher().call(new StaffModeToggleRequestEvent(this, context)).isCancelled()) { return; }
-		
-		// Capture and save current gameplay state
-		capture();
-		
-		// Set updated mode
+		// Update meta with restored mode
 		ConfigurationSection data = profileDataSection();
 		
-		META_MODE.set(data, mode.name());
+		META_MODE.set(data, context.mode().name());
 		META_TOGGLE_TIMESTAMP.set(data, Instant.now());
 		
 		core.updated();
 		
 		// Restore toggled mode's gameplay state
-		@NullOr GameplaySnapshot restored = snapshot(mode).orElse(null);
+		@NullOr GameplaySnapshot restored = snapshot(context.mode()).orElse(null);
 		
+		// Apply restored snapshot if it exists
 		if (restored != null) { restored.apply(context); }
-		else if (mode == Mode.STAFF) { GameplaySnapshot.RESPAWN.apply(context); }
+		// Otherwise, clear inventory/heal player if toggling staff mode for the first time
+		else if (context.mode() == Mode.STAFF) { GameplaySnapshot.RESPAWN.apply(context); }
 		
 		// Dispatch enable/disable event
-		Event event = switch (mode) {
+		Event event = switch (context.mode()) {
 			case STAFF -> new StaffModeEnableEvent(this, context);
 			case SURVIVAL -> new StaffModeDisableEvent(this, context);
 		};
 		
 		Events.dispatcher().call(event);
+	}
+	
+	@Override
+	public void mode(Mode mode)
+	{
+		@NullOr Player player = player().orElse(null);
+		if (player == null) { return; }
+		
+		Mode current = effectiveActiveMode(player);
+		if (mode == current) { return; }
+		
+		SnapshotContext context = new SnapshotContext(player, mode);
+		StaffModeToggleRequestEvent request = new StaffModeToggleRequestEvent(this, context);
+		
+		// Check whether player can toggle their staff mode (abort if cancelled)
+		if (Events.dispatcher().call(request).isCancelled()) { return; }
+		
+		// Capture and save current gameplay state
+		forceCaptureMode(new SnapshotContext(player, current));
+		
+		// Restore and apply snapshot from toggled mode
+		forceRestoreMode(context);
 	}
 }

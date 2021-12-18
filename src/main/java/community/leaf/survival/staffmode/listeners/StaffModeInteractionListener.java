@@ -36,7 +36,7 @@ public class StaffModeInteractionListener implements Listener
 	private boolean invulnerable(Player player)
 	{
 		return Permissions.STAFF_MEMBER.allows(player)
-			&& plugin.staff().onlineStaffMember(player).activeMode() == Mode.STAFF;
+			&& plugin.staff().onlineStaffMember(player).mode() == Mode.STAFF;
 	}
 	
 	private boolean cooldown(Player player)

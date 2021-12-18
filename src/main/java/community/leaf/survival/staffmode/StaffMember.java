@@ -32,7 +32,7 @@ public interface StaffMember
 	
 	Optional<GameplaySnapshot> snapshot(Mode mode);
 	
-	Mode activeMode();
+	Mode mode();
 	
 	void mode(Mode mode);
 }
