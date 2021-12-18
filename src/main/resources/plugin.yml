@@ -11,7 +11,7 @@ softdepend: [Vault, dynmap]
 
 commands:
   staffmode:
-    aliases: [smode, sm, smd, smdh, smh]
+    aliases: [smode, sm, smh]
     description: Toggle staff mode.
     permission: survivalstaffmode.staff
 
@@ -22,7 +22,7 @@ permissions:
   survivalstaffmode.enabled:
     description: |
       Signifies that staff mode is enabled.
-      Only add this permission to a rank that's applied when a player enters staff mode.
+      Only add this permission to a rank that's assigned when players enter staff mode.
     default: false
     children:
       survivalstaffmode.staff: true

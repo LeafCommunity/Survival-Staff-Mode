@@ -11,6 +11,8 @@ import com.github.zafarkhaja.semver.Version;
 import community.leaf.eventful.bukkit.BukkitEventSource;
 import community.leaf.survival.staffmode.commands.StaffModeCommand;
 import community.leaf.survival.staffmode.configs.StaffModeConfig;
+import community.leaf.survival.staffmode.listeners.StaffCommandListener;
+import community.leaf.survival.staffmode.listeners.StaffModeInteractionListener;
 import community.leaf.survival.staffmode.listeners.StaffSessionListener;
 import community.leaf.survival.staffmode.snapshots.SnapshotRegistry;
 import community.leaf.tasks.Concurrency;
@@ -75,6 +77,8 @@ public final class StaffModePlugin extends JavaPlugin implements BukkitEventSour
 	{
 		staff.loadDataFromDisk();
 		
+		events().register(new StaffCommandListener(this));
+		events().register(new StaffModeInteractionListener(this));
 		events().register(new StaffSessionListener(this));
 		
 		command("staffmode", new StaffModeCommand(this));

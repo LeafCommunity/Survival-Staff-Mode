@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 
 public final class StaffModeManager extends YamlDataFile implements StaffManager
 {
-	private static final String PROFILES_PATH = "survival-staff-mode.profiles";
+	private static final String PROFILES_PATH = "staff-mode.profiles";
 	
 	private final Map<UUID, StaffModeProfile> profilesByUuid = new HashMap<>();
 	
@@ -41,7 +41,7 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 	
 	StaffModeManager(StaffModePlugin plugin)
 	{
-		super(plugin.directory().resolve("data"), "survival-staff-mode.data.yml");
+		super(plugin.directory().resolve("data"), "staff-mode.data.yml");
 		
 		this.plugin = plugin;
 		this.snapshot = GameplaySnapshot.source(plugin.snapshots());
@@ -82,7 +82,7 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 			
 			for (String uuid : profilesDataSection().getKeys(false))
 			{
-				Adapter.ofString().intoUuid().deserialize(uuid).ifPresent(this::existingProfile);
+				Adapter.ofString().intoUuid().deserialize(uuid).ifPresent(this::existingProfileByUuid);
 			}
 		});
 	}
@@ -100,15 +100,13 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 				Path path = getFilePath();
 				Files.createDirectories(path.getParent());
 				Files.writeString(path, output);
+				updated(false);
 			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-			}
+			catch (IOException e) { e.printStackTrace(); }
 		};
 		
-		if (concurrency == Concurrency.ASYNC) { plugin.async().run(task); }
-		else { plugin.sync().run(task); }
+		if (concurrency == Concurrency.SYNC) { task.run(); }
+		else { plugin.async().run(task); }
 	}
 	
 	public OnlineStaffMemberList online() { return online; }
@@ -121,42 +119,49 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 	
 	private ConfigurationSection profilesDataSection() { return Sections.getOrCreate(data(), PROFILES_PATH); }
 	
-	public @NullOr StaffModeProfile existingProfile(UUID uuid)
+	public Optional<StaffModeProfile> existingProfileByUuid(UUID uuid)
 	{
 		@NullOr StaffModeProfile existing = profilesByUuid.get(uuid);
-		if (existing != null) { return existing; }
+		if (existing != null) { return Optional.of(existing); }
 		
 		@NullOr ConfigurationSection section = Sections.get(profilesDataSection(), uuid.toString()).orElse(null);
-		if (section == null) { return null; }
+		if (section == null) { return Optional.empty(); }
 		
 		StaffModeProfile profile = new StaffModeProfile(dependencies, uuid);
 		profilesByUuid.put(uuid, profile);
-		return profile;
+		return Optional.of(profile);
 	}
 	
-	public @NullOr StaffModeProfile playerProfile(Player player)
+	public Optional<StaffModeProfile> existingProfileOfPlayer(Player player)
 	{
 		UUID uuid = player.getUniqueId();
 		
-		@NullOr StaffModeProfile existing = existingProfile(player.getUniqueId());
-		if (existing != null) { return existing; }
+		Optional<StaffModeProfile> existing = existingProfileByUuid(uuid);
+		if (existing.isPresent()) { return existing; }
 		
-		if (Permissions.STAFF_MEMBER.denies(player)) { return null; }
+		if (Permissions.STAFF_MEMBER.denies(player)) { return Optional.empty(); }
 		
 		StaffModeProfile profile = new StaffModeProfile(dependencies, uuid);
 		profilesByUuid.put(uuid, profile);
-		return profile;
+		return Optional.of(profile);
+	}
+	
+	public StaffModeProfile profileOfOnlineStaffMember(Player player)
+	{
+		return existingProfileOfPlayer(player).orElseThrow(() ->
+			new IllegalArgumentException("Player is not a staff member and has no existing profile: " + player.getName())
+		);
+	}
+	
+	@SuppressWarnings({"unchecked", "OptionalUsedAsFieldOrParameterType"})
+	private static <S, T extends S> Optional<S> smuggle(Optional<T> optional)
+	{
+		return (Optional<S>) optional;
 	}
 	
 	@Override
-	public Optional<StaffMember> member(UUID uuid)
-	{
-		return Optional.ofNullable(existingProfile(uuid));
-	}
+	public Optional<StaffMember> member(UUID uuid) { return smuggle(existingProfileByUuid(uuid)); }
 	
 	@Override
-	public Optional<StaffMember> member(Player player)
-	{
-		return Optional.ofNullable(playerProfile(player));
-	}
+	public Optional<StaffMember> member(Player player) { return smuggle(existingProfileOfPlayer(player)); }
 }

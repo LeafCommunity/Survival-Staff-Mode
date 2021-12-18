@@ -8,6 +8,7 @@
 package community.leaf.survival.staffmode;
 
 import community.leaf.configvalues.bukkit.YamlValue;
+import community.leaf.configvalues.bukkit.util.Sections;
 import community.leaf.eventful.bukkit.Events;
 import community.leaf.survival.staffmode.events.StaffModeDisableEvent;
 import community.leaf.survival.staffmode.events.StaffModeEnableEvent;
@@ -35,9 +36,11 @@ public final class StaffModeProfile implements StaffMember
 		ConfigurationSection profileDataSection(UUID uuid);
 	}
 	
+	private static final YamlValue<String> META_NAME = YamlValue.ofString("meta.name").maybe();
+	
 	private static final YamlValue<String> META_MODE = YamlValue.ofString("meta.mode").maybe();
 	
-	private static final YamlValue<Instant> META_TIMESTAMP = YamlValue.ofInstant("meta.timestamp").maybe();
+	private static final YamlValue<Instant> META_TOGGLE_TIMESTAMP = YamlValue.ofInstant("meta.toggle").maybe();
 	
 	private final Dependencies core;
 	private final UUID uuid;
@@ -50,13 +53,20 @@ public final class StaffModeProfile implements StaffMember
 	
 	private ConfigurationSection profileDataSection() { return core.profileDataSection(uuid); }
 	
+	private ConfigurationSection modesDataSection() { return Sections.getOrCreate(profileDataSection(), "modes"); }
+	
+	public void updateMetaData()
+	{
+		player().map(Player::getName).ifPresent(name -> META_NAME.set(profileDataSection(), name));
+	}
+	
 	@Override
 	public UUID uuid() { return uuid; }
 	
 	@Override
 	public Optional<Instant> sinceLastToggle()
 	{
-		return META_TIMESTAMP.get(profileDataSection());
+		return META_TOGGLE_TIMESTAMP.get(profileDataSection());
 	}
 	
 	@Override
@@ -74,7 +84,7 @@ public final class StaffModeProfile implements StaffMember
 		Mode mode = activeMode();
 		GameplaySnapshot saved = core.snapshot().capture(new SnapshotContext(player, mode));
 		
-		core.snapshot().set(profileDataSection(), mode.name(), saved);
+		core.snapshot().set(modesDataSection(), mode.name(), saved);
 		core.updated();
 		
 		return Optional.of(saved);
@@ -83,7 +93,7 @@ public final class StaffModeProfile implements StaffMember
 	@Override
 	public Optional<GameplaySnapshot> snapshot(Mode mode)
 	{
-		return core.snapshot().get(profileDataSection(), mode.name());
+		return core.snapshot().get(modesDataSection(), mode.name());
 	}
 	
 	@Override
@@ -114,7 +124,7 @@ public final class StaffModeProfile implements StaffMember
 		ConfigurationSection data = profileDataSection();
 		
 		META_MODE.set(data, mode.name());
-		META_TIMESTAMP.set(data, Instant.now());
+		META_TOGGLE_TIMESTAMP.set(data, Instant.now());
 		
 		core.updated();
 		

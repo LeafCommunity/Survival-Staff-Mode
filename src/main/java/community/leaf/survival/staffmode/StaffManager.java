@@ -20,4 +20,11 @@ public interface StaffManager
 	Optional<StaffMember> member(UUID uuid);
 	
 	Optional<StaffMember> member(Player player);
+	
+	default StaffMember onlineStaffMember(Player player)
+	{
+		return member(player).orElseThrow(() ->
+			new IllegalArgumentException("Player is not a staff member: " + player.getName())
+		);
+	}
 }

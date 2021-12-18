@@ -12,6 +12,7 @@ import community.leaf.survival.staffmode.Mode;
 import community.leaf.survival.staffmode.Permissions;
 import community.leaf.survival.staffmode.StaffMember;
 import community.leaf.survival.staffmode.StaffModePlugin;
+import community.leaf.survival.staffmode.StaffModeProfile;
 import community.leaf.survival.staffmode.events.StaffModeDisableEvent;
 import community.leaf.survival.staffmode.events.StaffModeEnableEvent;
 import community.leaf.survival.staffmode.snapshots.defaults.PotionEffectsSnapshot;
@@ -70,9 +71,11 @@ public class StaffSessionListener implements Listener
 		if (Permissions.STAFF_MEMBER.denies(player)) { return; }
 		
 		plugin.staff().online().join(player);
-		StaffMember member = plugin.staff().member(player).orElseThrow();
 		
-		if (member.activeMode() != Mode.STAFF) { return; }
+		StaffModeProfile profile = plugin.staff().profileOfOnlineStaffMember(player);
+		profile.updateMetaData();
+		
+		if (profile.activeMode() != Mode.STAFF) { return; }
 		
 		// TODO: better message
 		event.getPlayer().sendMessage("Staff mode enabled.");
