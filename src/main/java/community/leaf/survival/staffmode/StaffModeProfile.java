@@ -95,7 +95,7 @@ public final class StaffModeProfile implements StaffMember
 		return META_MODE.get(profileDataSection()).flatMap(Mode.adapter()::deserialize);
 	}
 	
-	public GameplaySnapshot forceCaptureMode(SnapshotContext context)
+	public GameplaySnapshot forceCaptureSnapshot(SnapshotContext context)
 	{
 		validateReceivedContext(context);
 		
@@ -118,7 +118,7 @@ public final class StaffModeProfile implements StaffMember
 	@Override
 	public Optional<GameplaySnapshot> capture()
 	{
-		return player().map(player -> forceCaptureMode(new SnapshotContext(player, effectiveActiveMode(player))));
+		return player().map(player -> forceCaptureSnapshot(new SnapshotContext(player, effectiveActiveMode(player))));
 	}
 	
 	@Override
@@ -145,7 +145,7 @@ public final class StaffModeProfile implements StaffMember
 	}
 	
 	// Restore mode without capturing snapshot first
-	public void forceRestoreMode(SnapshotContext context)
+	public void forceRestoreSnapshot(SnapshotContext context)
 	{
 		validateReceivedContext(context);
 		
@@ -190,9 +190,9 @@ public final class StaffModeProfile implements StaffMember
 		if (Events.dispatcher().call(request).isCancelled()) { return; }
 		
 		// Capture and save current gameplay state
-		forceCaptureMode(new SnapshotContext(player, current));
+		forceCaptureSnapshot(new SnapshotContext(player, current));
 		
 		// Restore and apply snapshot from toggled mode
-		forceRestoreMode(context);
+		forceRestoreSnapshot(context);
 	}
 }

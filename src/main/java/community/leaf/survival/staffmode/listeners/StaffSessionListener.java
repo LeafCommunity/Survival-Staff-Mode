@@ -24,8 +24,6 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
-import org.bukkit.entity.Creature;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -40,15 +38,13 @@ public class StaffSessionListener implements Listener
 	{
 		this.plugin = plugin;
 		
-		plugin.sync().every(30).seconds().run(context ->
-		{
-			plugin.staff().online().refresh();
-			
-			if (context.iterations() % 4 == 0)
-			{
-				plugin.staff().streamOnlineStaffMembers().forEach(StaffMember::capture);
-				plugin.staff().saveIfUpdated(Concurrency.ASYNC);
-			}
+		plugin.sync().every(1).seconds().run(() ->
+			plugin.getServer().getOnlinePlayers().forEach(this::checkForDemotion)
+		);
+		
+		plugin.sync().every(2).minutes().run(() -> {
+			plugin.staff().streamOnlineStaffMembers().forEach(StaffMember::capture);
+			plugin.staff().saveIfUpdated(Concurrency.ASYNC);
 		});
 		
 		BaseComponent[] notification =
@@ -71,16 +67,18 @@ public class StaffSessionListener implements Listener
 	
 	private void applyStaffMode(SnapshotContext context)
 	{
+		Player player = context.player();
+		
+		plugin.getLogger().info(player.getName() + " enabled staff mode.");
+		
 		StatsSnapshot.HEALTHY.apply(context);
 		PotionEffectsSnapshot.EMPTY.apply(context);
 		
-		Player player = context.player();
-		
-		// Enable flight
+		// Enable flight.
 		player.setAllowFlight(true);
 		player.setFlying(true);
 		
-		// Clear targets of aggressive mobs since staff are immune
+		// Clear targets of aggressive mobs since staff are immune.
 		player.getNearbyEntities(256, 256, 256).stream()
 			.flatMap(entity -> Cast.as(Mob.class, entity).stream())
 			.filter(mob -> player.equals(mob.getTarget()))
@@ -90,15 +88,44 @@ public class StaffSessionListener implements Listener
 		player.sendMessage("Staff mode enabled.");
 	}
 	
+	private void checkForDemotion(Player player)
+	{
+		// Staff member, not demoted.
+		if (Permissions.STAFF_MEMBER.allows(player)) { return; }
+		
+		// Demotion: profile exists, but the player isn't staff anymore.
+		plugin.staff().existingPlayerProfile(player).ifPresent(profile ->
+		{
+			plugin.getLogger().info(
+				"Deleting demoted staff member " + player.getName() + "'s staff mode profile."
+			);
+			
+			// Player was last online in staff mode.
+			if (profile.mode() == Mode.STAFF)
+			{
+				plugin.getLogger().info(
+					player.getName() + " is in staff mode! " +
+					"Restoring their survival mode snapshot because they are no longer staff."
+				);
+				
+				// Forcibly restore their survival gameplay state.
+				profile.forceRestoreSnapshot(new SnapshotContext(player, Mode.SURVIVAL));
+			}
+			
+			// Player can't access staff mode, delete their profile.
+			plugin.staff().deleteProfile(player.getUniqueId());
+		});
+	}
+	
 	@EventListener
 	public void onStaffJoin(PlayerJoinEvent event)
 	{
 		Player player = event.getPlayer();
+		checkForDemotion(player);
+		
 		if (Permissions.STAFF_MEMBER.denies(player)) { return; }
 		
-		plugin.staff().online().join(player);
-		
-		StaffModeProfile profile = plugin.staff().profileOfOnlineStaffMember(player);
+		StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
 		profile.updateMetaData();
 		
 		if (profile.mode() == Mode.STAFF)
@@ -110,8 +137,7 @@ public class StaffSessionListener implements Listener
 	@EventListener
 	public void onStaffQuit(PlayerQuitEvent event)
 	{
-		// Remove from list regardless
-		plugin.staff().online().quit(event.getPlayer());
+		checkForDemotion(event.getPlayer());
 	}
 	
 	@EventListener
@@ -123,9 +149,8 @@ public class StaffSessionListener implements Listener
 	@EventListener
 	public void onStaffModeDisable(StaffModeDisableEvent event)
 	{
-		event.player().sendMessage("Staff mode disabled.");
-		
-		event.player().setAllowFlight(false);
-		event.player().setFlying(false);
+		Player player = event.player();
+		plugin.getLogger().info(player.getName() + " disabled staff mode.");
+		player.sendMessage("Staff mode disabled.");
 	}
 }

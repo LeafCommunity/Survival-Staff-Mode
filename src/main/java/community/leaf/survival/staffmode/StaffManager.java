@@ -7,6 +7,7 @@
  */
 package community.leaf.survival.staffmode;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.Optional;
@@ -15,11 +16,16 @@ import java.util.stream.Stream;
 
 public interface StaffManager
 {
-	Stream<StaffMember> streamOnlineStaffMembers();
-	
 	Optional<StaffMember> member(UUID uuid);
 	
 	Optional<StaffMember> member(Player player);
+	
+	default Stream<StaffMember> streamOnlineStaffMembers()
+	{
+		return Bukkit.getOnlinePlayers().stream()
+			.filter(Permissions.STAFF_MEMBER::allows)
+			.flatMap(player -> member(player).stream());
+	}
 	
 	default StaffMember onlineStaffMember(Player player)
 	{

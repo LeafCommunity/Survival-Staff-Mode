@@ -26,7 +26,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 public final class StaffModeManager extends YamlDataFile implements StaffManager
 {
@@ -36,7 +35,6 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 	
 	private final StaffModePlugin plugin;
 	private final SnapshotSource<GameplaySnapshot> snapshot;
-	private final OnlineStaffMemberList online;
 	private final StaffModeProfile.Dependencies dependencies;
 	
 	StaffModeManager(StaffModePlugin plugin)
@@ -45,7 +43,6 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 		
 		this.plugin = plugin;
 		this.snapshot = GameplaySnapshot.source(plugin.snapshots());
-		this.online = new OnlineStaffMemberList(plugin);
 		
 		this.dependencies = new StaffModeProfile.Dependencies()
 		{
@@ -109,15 +106,14 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 		else { plugin.async().run(task); }
 	}
 	
-	public OnlineStaffMemberList online() { return online; }
-	
-	@Override
-	public Stream<StaffMember> streamOnlineStaffMembers()
-	{
-		return online.streamOnlineStaff().map(this::member).flatMap(Optional::stream);
-	}
-	
 	private ConfigurationSection profilesDataSection() { return Sections.getOrCreate(data(), PROFILES_PATH); }
+	
+	public void deleteProfile(UUID uuid)
+	{
+		profilesByUuid.remove(uuid);
+		profilesDataSection().set(uuid.toString(), null);
+		updated(true);
+	}
 	
 	public Optional<StaffModeProfile> existingProfileByUuid(UUID uuid)
 	{
@@ -132,7 +128,7 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 		return Optional.of(profile);
 	}
 	
-	public Optional<StaffModeProfile> existingProfileOfPlayer(Player player)
+	public Optional<StaffModeProfile> existingPlayerProfile(Player player)
 	{
 		UUID uuid = player.getUniqueId();
 		
@@ -146,9 +142,9 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 		return Optional.of(profile);
 	}
 	
-	public StaffModeProfile profileOfOnlineStaffMember(Player player)
+	public StaffModeProfile onlineStaffMemberProfile(Player player)
 	{
-		return existingProfileOfPlayer(player).orElseThrow(() ->
+		return existingPlayerProfile(player).orElseThrow(() ->
 			new IllegalArgumentException("Player is not a staff member and has no existing profile: " + player.getName())
 		);
 	}
@@ -163,5 +159,5 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 	public Optional<StaffMember> member(UUID uuid) { return smuggle(existingProfileByUuid(uuid)); }
 	
 	@Override
-	public Optional<StaffMember> member(Player player) { return smuggle(existingProfileOfPlayer(player)); }
+	public Optional<StaffMember> member(Player player) { return smuggle(existingPlayerProfile(player)); }
 }
