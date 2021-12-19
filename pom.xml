@@ -5,12 +5,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>community.leaf</groupId>
-	<artifactId>survivalstaffmode</artifactId>
+	<artifactId>survival-staff-mode</artifactId>
 	<version>0.0.1</version>
 
-	<name>SurvivalStaffMode</name>
+	<name>Survival-Staff-Mode</name>
 	<inceptionYear>2021</inceptionYear>
-	<url>https://github.com/LeafCommunity/SurvivalStaffMode</url>
+	<url>https://github.com/LeafCommunity/Survival-Staff-Mode</url>
 	<description>Staff mode for survival servers.</description>
 
 	<licenses>
@@ -28,14 +28,14 @@
 	</developers>
 
 	<scm>
-		<connection>scm:git:git://github.com/LeafCommunity/SurvivalStaffMode.git</connection>
-		<developerConnection>scm:git:ssh://github.com:LeafCommunity/SurvivalStaffMode.git</developerConnection>
-		<url>http://github.com/LeafCommunity/SurvivalStaffMode</url>
+		<connection>scm:git:git://github.com/LeafCommunity/Survival-Staff-Mode.git</connection>
+		<developerConnection>scm:git:ssh://github.com:LeafCommunity/Survival-Staff-Mode.git</developerConnection>
+		<url>http://github.com/LeafCommunity/Survival-Staff-Mode</url>
 	</scm>
 
 	<issueManagement>
 		<system>GitHub Issues</system>
-		<url>https://github.com/LeafCommunity/SurvivalStaffMode/issues</url>
+		<url>https://github.com/LeafCommunity/Survival-Staff-Mode/issues</url>
 	</issueManagement>
 
 	<properties>
@@ -51,7 +51,7 @@
 		<!-- <license.header.year>${project.inceptionYear}-${maven.build.timestamp}</license.header.year> -->
 		<license.header.year>${project.inceptionYear}</license.header.year>
 		<license.header.owner>RezzedUp</license.header.owner>
-		<license.header.url>https://github.com/LeafCommunity/SurvivalStaffMode</license.header.url>
+		<license.header.url>https://github.com/LeafCommunity/Survival-Staff-Mode</license.header.url>
 	</properties>
 
 	<repositories>

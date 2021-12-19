@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021, RezzedUp <https://github.com/LeafCommunity/SurvivalStaffMode>
+ * Copyright © 2021, RezzedUp <https://github.com/LeafCommunity/Survival-Staff-Mode>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,7 +19,7 @@ public enum Permissions
 	
 	Permissions(String name)
 	{
-		this.node = "survivalstaffmode." + name;
+		this.node = "survival-staff-mode." + name;
 	}
 	
 	public String node() { return node; }

@@ -1,5 +1,5 @@
 main: community.leaf.survival.staffmode.StaffModePlugin
-name: SurvivalStaffMode
+name: Survival-Staff-Mode
 version: ${project.version}
 api-version: 1.13
 
@@ -11,23 +11,23 @@ softdepend: [Vault, dynmap]
 
 commands:
   staffmode:
-    aliases: [smode, sm, smh]
+    aliases: [staff-mode, smode, sm, smh]
     description: Toggle staff mode.
-    permission: survivalstaffmode.staff
+    permission: survival-staff-mode.staff
 
 permissions:
-  survivalstaffmode.staff:
+  survival-staff-mode.staff:
     description: Toggle staff mode for yourself.
     default: op
-  survivalstaffmode.enabled:
+  survival-staff-mode.enabled:
     description: |
       Signifies that staff mode is enabled.
       Only add this permission to a rank that's assigned when players enter staff mode.
     default: false
     children:
-      survivalstaffmode.staff: true
-  survivalstaffmode.admin:
+      survival-staff-mode.staff: true
+  survival-staff-mode.admin:
     description: Manage the SurvivalStaffMode plugin (reload configs, etc).
     default: op
     children:
-      survivalstaffmode.staff: true
+      survival-staff-mode.staff: true
