@@ -104,8 +104,7 @@ public class StaffSessionListener implements Listener
 			if (profile.mode() == Mode.STAFF)
 			{
 				plugin.getLogger().info(
-					player.getName() + " is in staff mode! " +
-					"Restoring their survival mode snapshot because they are no longer staff."
+					player.getName() + " is in staff mode! Restoring their survival mode snapshot."
 				);
 				
 				// Forcibly restore their survival gameplay state.

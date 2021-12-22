@@ -28,6 +28,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import pl.tlinkowski.annotation.basic.NullOr;
 
 import java.nio.file.Path;
+import java.util.logging.Level;
 
 public final class StaffModePlugin extends JavaPlugin implements BukkitEventSource, BukkitTaskSource, StaffModeAPI
 {
@@ -46,7 +47,7 @@ public final class StaffModePlugin extends JavaPlugin implements BukkitEventSour
 		this.backups = directory.resolve("backups");
 		this.version = Version.valueOf(getDescription().getVersion());
 		
-		getLogger().info("Initializing v" + version);
+		getLogger().info("Initializing " + getName() + " v" + version);
 		
 		this.config = new StaffModeConfig(this);
 		this.snapshots = new SnapshotRegistry(this);
@@ -74,6 +75,12 @@ public final class StaffModePlugin extends JavaPlugin implements BukkitEventSour
 	public StaffModeManager staff() { return staff; }
 	
 	@Override
+	public void onLoad()
+	{
+		PaperLib.suggestPaper(this, Level.WARNING);
+	}
+	
+	@Override
 	public void onEnable()
 	{
 		staff.loadDataFromDisk();
@@ -85,10 +92,6 @@ public final class StaffModePlugin extends JavaPlugin implements BukkitEventSour
 		if (PaperLib.isPaper())
 		{
 			events().register(new StaffModeInteractionListener.Paper(this));
-		}
-		else
-		{
-			PaperLib.suggestPaper(this);
 		}
 		
 		command("staffmode", new StaffModeCommand(this));

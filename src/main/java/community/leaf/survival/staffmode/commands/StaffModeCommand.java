@@ -56,6 +56,8 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 	
 	public static final Set<String> STAFF_SPECTATE_TOOL = Set.of("spectator", "spectate", "spec");
 	
+	public static final Set<String> STFF_FLY_TOOL = Set.of("fly");
+	
 	@AggregatedResult
 	public static final Set<String> STAFF_TOOLS =
 		Aggregates.set(
@@ -136,6 +138,11 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 	public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args)
 	{
 		List<String> suggestions = new ArrayList<>();
+		boolean filter = true;
+		
+		int last = args.length - 1;
+		String lastArg = (last < 0) ? "" : args[last];
+		String lastArgLowerCase = lastArg.toLowerCase(Locale.ROOT);
 		
 		if (args.length <= 1)
 		{
@@ -158,8 +165,16 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 				plugin.getLogger().info("Tab completing: /" + joiner.toString());
 				
 				@NullOr List<String> delegated = commandMap().tabComplete(sender, joiner.toString());
-				if (delegated == null || delegated.isEmpty()) { suggestions.add("<Command>"); }
-				else { suggestions.addAll(delegated); }
+				
+				if (delegated == null || delegated.isEmpty())
+				{
+					suggestions.add("<Command>");
+				}
+				else
+				{
+					suggestions.addAll(delegated);
+					filter = false; // no filtering, just send command's suggestions
+				}
 			}
 			else
 			{
@@ -167,7 +182,15 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 			}
 		}
 		
-		suggestions.sort(String.CASE_INSENSITIVE_ORDER);
+		if (filter)
+		{
+			suggestions.removeIf(entry ->
+				!(entry.startsWith("<") || entry.toLowerCase(Locale.ROOT).contains(lastArgLowerCase))
+			);
+			
+			suggestions.sort(String.CASE_INSENSITIVE_ORDER);
+		}
+		
 		return suggestions;
 	}
 	
