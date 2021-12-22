@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 public class StaffModeCommand implements CommandExecutor, TabCompleter
 {
@@ -57,11 +56,11 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 			Aggregates.matching().all("TOGGLE").collections(true)
 		);
 	
-	public static final Set<String> STAFF_RUN = Set.of("run", "then");
-	
 	public static final Set<String> STAFF_CHECK = Set.of("check");
 	
 	// Staff Mode Tools
+	
+	public static final Set<String> STAFF_RUN_TOOL = Set.of("run", "then");
 	
 	public static final Set<String> STAFF_NIGHT_VISION_TOOL = Set.of("nightvision", "nv");
 	
@@ -135,7 +134,6 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 		String choice = (args.length >= 1) ? args[0].toLowerCase(Locale.ROOT) : "toggle";
 		
 		if (STAFF_TOGGLES.contains(choice)) { return toggle(sender, args); }
-		if (STAFF_RUN.contains(choice)) { return run(sender, args); }
 		if (STAFF_CHECK.contains(choice)) { return check(sender, args); }
 		if (STAFF_TOOLS.contains(choice)) { return tools(sender, args); }
 		if (ADMIN_RELOAD.contains(choice)) { return reload(sender); }
@@ -155,7 +153,7 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 		String lastArg = (last < 0) ? "" : args[last];
 		String lastArgLowerCase = lastArg.toLowerCase(Locale.ROOT);
 		
-		if (args.length <= 1)
+		out: if (args.length <= 1)
 		{
 			if (Permissions.ADMIN.allows(sender)) { suggestions.addAll(ALL_ADMIN_ARGUMENTS); }
 			else { suggestions.addAll(ALL_STAFF_ARGUMENTS); }
@@ -164,28 +162,44 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 		{
 			String choice = args[0].toLowerCase(Locale.ROOT);
 			
-			if (STAFF_RUN.contains(choice))
+			if (STAFF_TOOLS.contains(choice))
 			{
-				StringJoiner joiner = new StringJoiner(" ");
-				
-				for (int i = 1; i < args.length; i++)
+				// Search for 'run' tool suggestions
+				for (int i = 0; i < args.length; i++)
 				{
-					joiner.add((i == 1) ? args[i].replaceFirst("/", "") : args[i]);
+					if (STAFF_RUN_TOOL.contains(args[i].toLowerCase(Locale.ROOT)))
+					{
+						if (i == last)
+						{
+							suggestions.addAll(STAFF_RUN_TOOL);
+							break out;
+						}
+						
+						StringJoiner joiner = new StringJoiner(" ");
+						
+						for (int start = ++i; i < args.length; i++)
+						{
+							joiner.add((i == start) ? args[i].replaceFirst("/", "") : args[i]);
+						}
+						
+						@NullOr List<String> delegated = commandMap().tabComplete(sender, joiner.toString());
+						
+						if (delegated == null || delegated.isEmpty())
+						{
+							suggestions.add("<Command>");
+						}
+						else
+						{
+							suggestions.addAll(delegated);
+							filter = false; // no filtering, just send command's suggestions
+						}
+						
+						// No more suggestions necessary.
+						break out;
+					}
 				}
 				
-				plugin.getLogger().info("Tab completing: /" + joiner.toString());
-				
-				@NullOr List<String> delegated = commandMap().tabComplete(sender, joiner.toString());
-				
-				if (delegated == null || delegated.isEmpty())
-				{
-					suggestions.add("<Command>");
-				}
-				else
-				{
-					suggestions.addAll(delegated);
-					filter = false; // no filtering, just send command's suggestions
-				}
+				suggestions.addAll(STAFF_TOOLS);
 			}
 			else
 			{
@@ -198,8 +212,9 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 			suggestions.removeIf(entry ->
 				!(entry.startsWith("<") || entry.toLowerCase(Locale.ROOT).contains(lastArgLowerCase))
 			);
-			
-			suggestions.sort(String.CASE_INSENSITIVE_ORDER);
+		
+			if (suggestions.isEmpty()) { suggestions.add("<Unknown argument>"); }
+			else { suggestions.sort(String.CASE_INSENSITIVE_ORDER); }
 		}
 		
 		return suggestions;
@@ -226,17 +241,6 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 		return true;
 	}
 	
-	private boolean run(CommandSender sender, String[] args)
-	{
-		if (!(sender instanceof Player player))
-		{
-			return error(sender, "Only players may use this command");
-		}
-		
-		sender.sendMessage("run");
-		return true;
-	}
-	
 	private boolean check(CommandSender sender, String[] args)
 	{
 		sender.sendMessage("check");
@@ -247,14 +251,22 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 	{
 		if (!(sender instanceof Player player)) { return error(sender, "Only players may use this command"); }
 		
+		// Only apply tools once (avoids /staffmode spec spec spec spec, etc.)
 		Map<String, BiConsumer<StaffModeProfile, Boolean>> tools = new LinkedHashMap<>();
 		List<String> unknown = new ArrayList<>();
 		
-		for (String arg : args)
+		for (int i = 0; i < args.length; i++)
 		{
+			String arg = args[i];
 			String tool = arg.toLowerCase(Locale.ROOT);
 			
-			if (STAFF_NIGHT_VISION_TOOL.contains(tool)) { tools.put("night-vision", this::nightVision); }
+			if (STAFF_RUN_TOOL.contains(tool))
+			{
+				StringJoiner joiner = new StringJoiner(" ");
+				for (++i; i < args.length; i++) { joiner.add(args[i]); }
+				tools.put("run", (profile, enabled) -> run(profile, enabled, joiner.toString()));
+			}
+			else if (STAFF_NIGHT_VISION_TOOL.contains(tool)) { tools.put("night-vision", this::nightVision); }
 			else if (STAFF_SPECTATE_TOOL.contains(tool)) { tools.put("spectator", this::spectator); }
 			else if (STAFF_FLY_TOOL.contains(tool)) { tools.put("fly", this::fly); }
 			else { unknown.add(arg); }
@@ -277,6 +289,25 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 		}
 		
 		return true;
+	}
+	
+	private void run(StaffModeProfile profile, boolean enabledStaffMode, String command)
+	{
+		Player player = profile.online();
+		
+		if (command.isEmpty())
+		{
+			error(player, "Missing command to run");
+			return;
+		}
+		
+		command = (command.startsWith("/")) ? command : "/" + command;
+		
+		TextChain.using(plugin).legacy().chain()
+			.then("Executing: &7&o" + command)
+			.sendToRecipient(player);
+		
+		player.chat(command);
 	}
 	
 	private void nightVision(StaffModeProfile profile, boolean enabledStaffMode)

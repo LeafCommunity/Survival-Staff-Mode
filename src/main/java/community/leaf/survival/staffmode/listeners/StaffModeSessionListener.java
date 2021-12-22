@@ -77,6 +77,9 @@ public class StaffModeSessionListener implements Listener
 		
 		plugin.getLogger().info(player.getName() + " enabled staff mode.");
 		
+		// TODO: better message
+		player.sendMessage("Staff mode enabled.");
+		
 		StatsSnapshot.HEALTHY.apply(context);
 		PotionEffectsSnapshot.EMPTY.apply(context);
 		
@@ -92,9 +95,6 @@ public class StaffModeSessionListener implements Listener
 		
 		if (profile.nightVision()) { NightVision.apply(player); }
 		if (profile.spectator()) { player.setGameMode(GameMode.SPECTATOR); }
-		
-		// TODO: better message
-		player.sendMessage("Staff mode enabled.");
 	}
 	
 	private void checkForDemotion(Player player)

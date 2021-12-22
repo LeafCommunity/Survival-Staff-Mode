@@ -8,6 +8,7 @@
 package community.leaf.survival.staffmode.snapshots.defaults;
 
 import com.rezzedup.util.valuables.Adapter;
+import community.leaf.survival.staffmode.Mode;
 import community.leaf.survival.staffmode.snapshots.Snapshot;
 import community.leaf.survival.staffmode.snapshots.SnapshotContext;
 import community.leaf.survival.staffmode.snapshots.SnapshotSource;
@@ -34,6 +35,9 @@ public record PotionEffectsSnapshot(List<PotionEffect> effects) implements Snaps
 	public static final SnapshotSource<PotionEffectsSnapshot> SOURCE =
 		new SnapshotSource<>()
 		{
+			@Override
+			public boolean isApplicable(SnapshotContext context) { return context.mode() == Mode.SURVIVAL; }
+			
 			@Override
 			public PotionEffectsSnapshot capture(SnapshotContext context) { return of(context.player()); }
 			

@@ -16,6 +16,7 @@ import community.leaf.survival.staffmode.events.StaffModeToggleRequestEvent;
 import community.leaf.survival.staffmode.snapshots.GameplaySnapshot;
 import community.leaf.survival.staffmode.snapshots.SnapshotContext;
 import community.leaf.survival.staffmode.snapshots.SnapshotSource;
+import community.leaf.survival.staffmode.util.Strings;
 import org.bukkit.GameMode;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -222,7 +223,7 @@ public final class StaffModeProfile implements StaffMember
 	public void spectator(@NullOr GameMode priorGameMode)
 	{
 		if (priorGameMode == GameMode.SPECTATOR) { priorGameMode = null; }
-		profileDataSection().set(SPECTATOR_SETTING.key(), priorGameMode);
+		SPECTATOR_SETTING.set(profileDataSection(), Strings.mapOrNull(priorGameMode, Enum::name));
 		core.updated();
 	}
 	
