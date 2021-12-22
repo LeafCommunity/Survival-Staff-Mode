@@ -8,10 +8,14 @@
 package community.leaf.survival.staffmode.listeners;
 
 import com.destroystokyo.paper.event.player.PlayerAdvancementCriterionGrantEvent;
+import community.leaf.eventful.bukkit.CancellationPolicy;
 import community.leaf.eventful.bukkit.ListenerOrder;
+import community.leaf.eventful.bukkit.annotations.CancelledEvents;
 import community.leaf.eventful.bukkit.annotations.EventListener;
 import community.leaf.survival.staffmode.StaffMember;
 import community.leaf.survival.staffmode.StaffModePlugin;
+import community.leaf.survival.staffmode.StaffModeProfile;
+import org.bukkit.GameMode;
 import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -34,16 +38,31 @@ public class StaffModeInteractionListener implements Listener
 		this.plugin = plugin;
 	}
 	
-	@EventListener(ListenerOrder.FIRST)
+	@EventListener(ListenerOrder.LAST)
+	@CancelledEvents(CancellationPolicy.REJECT)
 	public void onGamemodeChange(PlayerGameModeChangeEvent event)
 	{
 		Player player = event.getPlayer();
+		if (!plugin.staff().isInStaffMode(player)) { return; }
+		
+		StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
+		
+		GameMode former = player.getGameMode();
+		GameMode latter = event.getNewGameMode();
+		
+		boolean isEnablingSpectator = former != GameMode.SPECTATOR && latter == GameMode.SPECTATOR;
+		boolean isDisabledSpectator = former == GameMode.SPECTATOR && latter != GameMode.SPECTATOR;
+		
+		// Update spectator status if enabling or disabling spectator mode.
+		if (isEnablingSpectator || isDisabledSpectator) { profile.spectator(former); }
 		
 		// Allow flight if player is changing to survival mode
 		// from another gamemode *while* in staff mode.
 		// mode mode mode.
 		plugin.sync().run(() ->
 		{
+			// Maybe they were demoted since last checking?
+			// Better be safe about it.
 			if (plugin.staff().isInStaffMode(player))
 			{
 				player.setAllowFlight(true);

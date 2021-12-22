@@ -16,6 +16,7 @@ import community.leaf.survival.staffmode.events.StaffModeToggleRequestEvent;
 import community.leaf.survival.staffmode.snapshots.GameplaySnapshot;
 import community.leaf.survival.staffmode.snapshots.SnapshotContext;
 import community.leaf.survival.staffmode.snapshots.SnapshotSource;
+import org.bukkit.GameMode;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -43,6 +44,10 @@ public final class StaffModeProfile implements StaffMember
 	private static final YamlValue<String> META_MODE = YamlValue.ofString("meta.mode").maybe();
 	
 	private static final YamlValue<Instant> META_TOGGLE_TIMESTAMP = YamlValue.ofInstant("meta.toggle").maybe();
+	
+	private static final YamlValue<Instant> NIGHT_VISION_SETTING = YamlValue.ofInstant("meta.settings.night-vision").maybe();
+	
+	private static final YamlValue<String> SPECTATOR_SETTING = YamlValue.ofString("meta.settings.spectator").maybe();
 	
 	private final Map<Mode, GameplaySnapshot> snapshotsCache = new EnumMap<>(Mode.class);
 	
@@ -194,5 +199,40 @@ public final class StaffModeProfile implements StaffMember
 		
 		// Restore and apply snapshot from toggled mode
 		forceRestoreSnapshot(context);
+	}
+	
+	public boolean nightVision()
+	{
+		return profileDataSection().contains(NIGHT_VISION_SETTING.key());
+	}
+	
+	public void nightVision(boolean enabled)
+	{
+		if (enabled) { NIGHT_VISION_SETTING.set(profileDataSection(), Instant.now()); }
+		else { NIGHT_VISION_SETTING.remove(profileDataSection()); }
+		core.updated();
+	}
+	
+	public boolean spectator()
+	{
+		return profileDataSection().contains(SPECTATOR_SETTING.key());
+	}
+	
+	public void spectator(@NullOr GameMode priorGameMode)
+	{
+		if (priorGameMode == GameMode.SPECTATOR) { priorGameMode = null; }
+		profileDataSection().set(SPECTATOR_SETTING.key(), priorGameMode);
+		core.updated();
+	}
+	
+	public GameMode gameModePriorToSpectator()
+	{
+		return SPECTATOR_SETTING.get(profileDataSection())
+			.map(str -> {
+				try { return GameMode.valueOf(str); }
+				catch (RuntimeException ignored) { return null; }
+			})
+			.filter(mode -> mode != GameMode.SPECTATOR)
+			.orElse(GameMode.SURVIVAL);
 	}
 }

@@ -10,10 +10,16 @@ package community.leaf.survival.staffmode.commands;
 import com.rezzedup.util.constants.Aggregates;
 import com.rezzedup.util.constants.annotations.AggregatedResult;
 import com.rezzedup.util.constants.types.TypeCapture;
+import community.leaf.survival.staffmode.Mode;
 import community.leaf.survival.staffmode.Permissions;
 import community.leaf.survival.staffmode.StaffMember;
 import community.leaf.survival.staffmode.StaffModePlugin;
+import community.leaf.survival.staffmode.StaffModeProfile;
+import community.leaf.survival.staffmode.util.NightVision;
+import community.leaf.textchain.adventure.TextChain;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandMap;
@@ -24,10 +30,13 @@ import pl.tlinkowski.annotation.basic.NullOr;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.function.Consumer;
 
 public class StaffModeCommand implements CommandExecutor, TabCompleter
 {
@@ -56,7 +65,7 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 	
 	public static final Set<String> STAFF_SPECTATE_TOOL = Set.of("spectator", "spectate", "spec");
 	
-	public static final Set<String> STFF_FLY_TOOL = Set.of("fly");
+	public static final Set<String> STAFF_FLY_TOOL = Set.of("fly");
 	
 	@AggregatedResult
 	public static final Set<String> STAFF_TOOLS =
@@ -196,6 +205,10 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 	
 	private boolean error(CommandSender sender, String message)
 	{
+		TextChain.using(plugin).chain()
+			.then("Uhoh. ").bold().color(NamedTextColor.RED)
+			.then(message)
+			.sendToRecipient(sender);
 		return true;
 	}
 	
@@ -218,31 +231,124 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 			return error(sender, "Only players may use this command");
 		}
 		
+		sender.sendMessage("run");
 		return true;
 	}
 	
 	private boolean check(CommandSender sender, String[] args)
 	{
+		sender.sendMessage("check");
 		return true;
 	}
 	
 	private boolean tools(CommandSender sender, String[] args)
 	{
+		if (!(sender instanceof Player player)) { return error(sender, "Only players may use this command"); }
+		
+		Map<String, Consumer<Player>> tools = new LinkedHashMap<>();
+		List<String> unknown = new ArrayList<>();
+		
+		for (String arg : args)
+		{
+			String tool = arg.toLowerCase(Locale.ROOT);
+			
+			if (STAFF_NIGHT_VISION_TOOL.contains(tool)) { tools.put("night-vision", this::nightVision); }
+			else if (STAFF_SPECTATE_TOOL.contains(tool)) { tools.put("spectator", this::spectator); }
+			else if (STAFF_FLY_TOOL.contains(tool)) { tools.put("fly", this::fly); }
+			else { unknown.add(arg); }
+		}
+		
+		tools.values().forEach(tool -> tool.accept(player));
+		
+		if (!unknown.isEmpty())
+		{
+			error(player, "Unknown argument(s): " + String.join(" ", unknown));
+		}
+		
 		return true;
+	}
+	
+	private boolean cannotBePutIntoStaffMode(StaffMember member)
+	{
+		if (member.mode() == Mode.STAFF) { return false; }
+		
+		member.mode(Mode.STAFF);
+		return member.mode() != Mode.STAFF;
+	}
+	
+	private void nightVision(Player player)
+	{
+		StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
+		if (cannotBePutIntoStaffMode(profile)) { return; }
+		
+		boolean toggle = !profile.nightVision();
+		profile.nightVision(toggle);
+		
+		if (toggle)
+		{
+			NightVision.apply(player);
+			
+			TextChain.using(plugin).legacy().chain()
+				.then("&oEnabled night vision.")
+				.sendToRecipient(player);
+		}
+		else
+		{
+			NightVision.remove(player);
+			
+			TextChain.using(plugin).legacy().chain()
+				.then("&oDisabled night vision.")
+				.sendToRecipient(player);
+		}
+	}
+	
+	private void spectator(Player player)
+	{
+		StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
+		if (cannotBePutIntoStaffMode(profile)) { return; }
+		
+		if (profile.spectator() && player.getGameMode() == GameMode.SPECTATOR)
+		{
+			player.setGameMode(profile.gameModePriorToSpectator());
+			
+			TextChain.using(plugin).legacy().chain()
+				.then("&oDisabled spectator mode.")
+				.sendToRecipient(player);
+		}
+		else
+		{
+			player.setGameMode(GameMode.SPECTATOR);
+			
+			TextChain.using(plugin).legacy().chain()
+				.then("&oEnabled spectator mode.")
+				.sendToRecipient(player);
+		}
+	}
+	
+	private void fly(Player player)
+	{
+		StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
+		if (cannotBePutIntoStaffMode(profile)) { return; }
+		
+		player.setAllowFlight(true);
+		player.setFlying(true);
 	}
 	
 	private boolean reload(CommandSender sender)
 	{
+		sender.sendMessage("reload");
 		return true;
 	}
 	
 	private boolean info(CommandSender sender)
 	{
+		sender.sendMessage("info");
 		return true;
 	}
 	
 	private boolean usage(CommandSender sender)
 	{
+		sender.sendMessage("usage");
 		return true;
 	}
 }

@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 public final class StaffModeManager extends YamlDataFile implements StaffManager
 {
@@ -147,6 +148,13 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 		return existingPlayerProfile(player).orElseThrow(() ->
 			new IllegalArgumentException("Player is not a staff member and has no existing profile: " + player.getName())
 		);
+	}
+	
+	public Stream<StaffModeProfile> streamOnlineStaffProfiles()
+	{
+		return plugin.getServer().getOnlinePlayers().stream()
+			.filter(Permissions.STAFF_MEMBER::allows)
+			.flatMap(player -> existingPlayerProfile(player).stream());
 	}
 	
 	@SuppressWarnings({"unchecked", "OptionalUsedAsFieldOrParameterType"})

@@ -19,55 +19,60 @@ import community.leaf.survival.staffmode.events.StaffModeEnableEvent;
 import community.leaf.survival.staffmode.snapshots.SnapshotContext;
 import community.leaf.survival.staffmode.snapshots.defaults.PotionEffectsSnapshot;
 import community.leaf.survival.staffmode.snapshots.defaults.StatsSnapshot;
+import community.leaf.survival.staffmode.util.NightVision;
 import community.leaf.tasks.Concurrency;
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
+import community.leaf.textchain.adventure.TextChain;
+import community.leaf.textchain.platforms.bukkit.BukkitTextChain;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-public class StaffSessionListener implements Listener
+public class StaffModeSessionListener implements Listener
 {
 	private final StaffModePlugin plugin;
 	
-	public StaffSessionListener(StaffModePlugin plugin)
+	public StaffModeSessionListener(StaffModePlugin plugin)
 	{
 		this.plugin = plugin;
 		
+		// Check for demotions...
 		plugin.sync().every(1).seconds().run(() ->
 			plugin.getServer().getOnlinePlayers().forEach(this::checkForDemotion)
 		);
 		
+		// Replenish night vision...
+		plugin.sync().every(30).seconds().run(() ->
+			plugin.staff().streamOnlineStaffProfiles()
+				.filter(StaffModeProfile::nightVision)
+				.flatMap(profile -> profile.player().stream())
+				.forEach(NightVision::apply)
+		);
+		
+		// Capture snapshots and save data to disk
 		plugin.sync().every(2).minutes().run(() -> {
 			plugin.staff().streamOnlineStaffMembers().forEach(StaffMember::capture);
 			plugin.staff().saveIfUpdated(Concurrency.ASYNC);
 		});
 		
-		BaseComponent[] notification =
-			new ComponentBuilder()
-				.append("STAFF MODE")
-					.color(ChatColor.RED)
-					.bold(true)
-					.italic(true)
-				.create();
+		BukkitTextChain notification =
+			TextChain.using(plugin).chain().then("STAFF MODE.").bold().color(NamedTextColor.RED);
 		
 		plugin.sync().every(2).ticks().run(() -> {
 			plugin.staff().streamOnlineStaffMembers()
 				.filter(member -> member.mode() == Mode.STAFF)
 				.flatMap(member -> member.player().stream())
-				.forEach(player ->
-					player.spigot().sendMessage(ChatMessageType.ACTION_BAR, notification)
-				);
+				.forEach(notification::actionBarToRecipient);
 		});
 	}
 	
 	private void applyStaffMode(SnapshotContext context)
 	{
 		Player player = context.player();
+		StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
 		
 		plugin.getLogger().info(player.getName() + " enabled staff mode.");
 		
@@ -83,6 +88,9 @@ public class StaffSessionListener implements Listener
 			.flatMap(entity -> Cast.as(Mob.class, entity).stream())
 			.filter(mob -> player.equals(mob.getTarget()))
 			.forEach(mob -> mob.setTarget(null));
+		
+		if (profile.nightVision()) { NightVision.apply(player); }
+		if (profile.spectator()) { player.setGameMode(GameMode.SPECTATOR); }
 		
 		// TODO: better message
 		player.sendMessage("Staff mode enabled.");
@@ -127,10 +135,7 @@ public class StaffSessionListener implements Listener
 		StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
 		profile.updateMetaData();
 		
-		if (profile.mode() == Mode.STAFF)
-		{
-			applyStaffMode(new SnapshotContext(player, Mode.STAFF));
-		}
+		if (profile.mode() == Mode.STAFF) { applyStaffMode(new SnapshotContext(player, Mode.STAFF)); }
 	}
 	
 	@EventListener
@@ -150,6 +155,11 @@ public class StaffSessionListener implements Listener
 	{
 		Player player = event.player();
 		plugin.getLogger().info(player.getName() + " disabled staff mode.");
+		
+		// Set player back in survival mode.
+		player.setGameMode(GameMode.SURVIVAL);
+		
+		// TODO: better message
 		player.sendMessage("Staff mode disabled.");
 	}
 }

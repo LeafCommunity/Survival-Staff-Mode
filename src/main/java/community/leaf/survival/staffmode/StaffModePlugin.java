@@ -13,7 +13,7 @@ import community.leaf.survival.staffmode.commands.StaffModeCommand;
 import community.leaf.survival.staffmode.configs.StaffModeConfig;
 import community.leaf.survival.staffmode.listeners.StaffCommandListener;
 import community.leaf.survival.staffmode.listeners.StaffModeInteractionListener;
-import community.leaf.survival.staffmode.listeners.StaffSessionListener;
+import community.leaf.survival.staffmode.listeners.StaffModeSessionListener;
 import community.leaf.survival.staffmode.snapshots.SnapshotRegistry;
 import community.leaf.tasks.Concurrency;
 import community.leaf.tasks.bukkit.BukkitTaskSource;
@@ -102,7 +102,7 @@ public final class StaffModePlugin extends JavaPlugin implements BukkitEventSour
 		
 		events().register(new StaffCommandListener(this));
 		events().register(new StaffModeInteractionListener(this));
-		events().register(new StaffSessionListener(this));
+		events().register(new StaffModeSessionListener(this));
 		
 		if (PaperLib.isPaper())
 		{
