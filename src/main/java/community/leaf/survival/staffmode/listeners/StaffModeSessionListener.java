@@ -47,7 +47,7 @@ public class StaffModeSessionListener implements Listener
 				checkForDemotion(player);
 				if (!plugin.staff().isInStaffMode(player)) { continue; }
 				
-				StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
+				StaffModeProfile profile = plugin.staff().onlineStaffProfile(player);
 				// Replenish night vision...
 				if (profile.nightVision()) { NightVision.apply(player); }
 			}
@@ -73,7 +73,7 @@ public class StaffModeSessionListener implements Listener
 	private void applyStaffMode(SnapshotContext context)
 	{
 		Player player = context.player();
-		StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
+		StaffModeProfile profile = plugin.staff().onlineStaffProfile(player);
 		
 		plugin.getLogger().info(player.getName() + " enabled staff mode.");
 		
@@ -133,7 +133,7 @@ public class StaffModeSessionListener implements Listener
 		
 		if (Permissions.STAFF_MEMBER.denies(player)) { return; }
 		
-		StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
+		StaffModeProfile profile = plugin.staff().onlineStaffProfile(player);
 		profile.updateMetaData();
 		
 		if (profile.mode() == Mode.STAFF) { applyStaffMode(new SnapshotContext(player, Mode.STAFF)); }

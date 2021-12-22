@@ -7,6 +7,7 @@
  */
 package community.leaf.survival.staffmode;
 
+import com.rezzedup.util.exceptional.Attempt;
 import community.leaf.configvalues.bukkit.YamlValue;
 import community.leaf.configvalues.bukkit.util.Sections;
 import community.leaf.eventful.bukkit.Events;
@@ -230,10 +231,7 @@ public final class StaffModeProfile implements StaffMember
 	public GameMode gameModePriorToSpectator()
 	{
 		return SPECTATOR_SETTING.get(profileDataSection())
-			.map(str -> {
-				try { return GameMode.valueOf(str); }
-				catch (RuntimeException ignored) { return null; }
-			})
+			.flatMap(str -> Attempt.ignoring(() -> GameMode.valueOf(str)))
 			.filter(mode -> mode != GameMode.SPECTATOR)
 			.orElse(GameMode.SURVIVAL);
 	}

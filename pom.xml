@@ -144,6 +144,12 @@
 			<artifactId>paperlib</artifactId>
 			<version>1.0.7</version>
 		 </dependency>
+		<!-- RezzedUp Exceptional (via maven-central) -->
+		<dependency>
+			<groupId>com.rezzedup.util</groupId>
+			<artifactId>exceptional</artifactId>
+			<version>0.1.0</version>
+		</dependency>
 
 		<!-- ~ ~ ~ -->
 		<!-- HOOKS -->

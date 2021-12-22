@@ -8,6 +8,7 @@
 package community.leaf.survival.staffmode.util;
 
 import com.github.zafarkhaja.semver.Version;
+import com.rezzedup.util.exceptional.Attempt;
 import com.rezzedup.util.valuables.Adapter;
 import community.leaf.configvalues.bukkit.YamlAccessor;
 
@@ -21,10 +22,7 @@ public class Versions
 	
 	public static final YamlAccessor<Version> YAML =
 		YamlAccessor.of(Adapter.of(
-			object -> {
-				try { return Optional.of(Version.valueOf(String.valueOf(object))); }
-				catch (RuntimeException e) { return Optional.empty(); }
-			},
+			object -> Attempt.ignoring(() -> Version.valueOf(String.valueOf(object))),
 			version -> Optional.of(String.valueOf(version))
 		));
 }

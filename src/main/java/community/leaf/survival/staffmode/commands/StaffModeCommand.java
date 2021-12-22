@@ -12,12 +12,14 @@ import com.rezzedup.util.constants.annotations.AggregatedResult;
 import com.rezzedup.util.constants.types.TypeCapture;
 import community.leaf.survival.staffmode.Mode;
 import community.leaf.survival.staffmode.Permissions;
-import community.leaf.survival.staffmode.StaffMember;
 import community.leaf.survival.staffmode.StaffModePlugin;
 import community.leaf.survival.staffmode.StaffModeProfile;
 import community.leaf.survival.staffmode.ToggleSwitch;
+import community.leaf.survival.staffmode.snapshots.SnapshotContext;
 import community.leaf.survival.staffmode.util.NightVision;
 import community.leaf.textchain.adventure.TextChain;
+import community.leaf.textchain.adventure.TextProcessor;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -133,7 +135,7 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 	{
 		String choice = (args.length >= 1) ? args[0].toLowerCase(Locale.ROOT) : "toggle";
 		
-		if (STAFF_TOGGLES.contains(choice)) { return toggle(sender, args); }
+		if (STAFF_TOGGLES.contains(choice)) { return toggle(sender, choice); }
 		if (STAFF_CHECK.contains(choice)) { return check(sender, args); }
 		if (STAFF_TOOLS.contains(choice)) { return tools(sender, args); }
 		if (ADMIN_RELOAD.contains(choice)) { return reload(sender); }
@@ -224,20 +226,52 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 	{
 		TextChain.using(plugin).chain()
 			.then("Uhoh. ").bold().color(NamedTextColor.RED)
-			.then(message)
+			.then(message, TextProcessor.legacyAmpersand())
 			.sendToRecipient(sender);
 		return true;
 	}
 	
-	private boolean toggle(CommandSender sender, String[] args)
+	private boolean toggle(CommandSender sender, String choice)
 	{
 		if (!(sender instanceof Player player))
 		{
 			return error(sender, "Only players may use this command");
 		}
 		
-		StaffMember member = plugin.staff().member(player).orElseThrow();
-		member.mode(member.mode().toggle());
+		StaffModeProfile profile = plugin.staff().onlineStaffProfile(player);
+		Mode mode;
+		
+		if (STAFF_TOGGLE_ON.contains(choice)) { mode = Mode.STAFF; }
+		else if (STAFF_TOGGLE_OFF.contains(choice)) { mode = Mode.SURVIVAL; }
+		else { mode = profile.mode().toggle(); }
+		
+		ToggleSwitch status = profile.mode(mode);
+		
+		if (status == ToggleSwitch.ALREADY)
+		{
+			TextChain.using(plugin).chain()
+				.then("Hey! ")
+					.color(NamedTextColor.RED).bold().italic()
+				.then("You're already in " + mode.name().toLowerCase(Locale.ROOT) + " mode!")
+				.sendToRecipient(player);
+		}
+		else if (status == ToggleSwitch.FAILURE)
+		{
+			error(player, "Could not switch to " + mode.name().toLowerCase(Locale.ROOT) + " mode.");
+		}
+		// Rare case: server admin has the 'staffmode.enabled' permission still
+		// and cannot actually leave staff mode.
+		else if (mode == Mode.SURVIVAL && profile.mode() != Mode.SURVIVAL)
+		{
+			error(
+				player,
+				"You still have access to the &c&n" + Permissions.STAFF_MODE_ENABLED.node() + "&r " +
+				"permission node and cannot leave staff mode until it is removed from your rank."
+			);
+			
+			profile.forceRestoreSnapshot(new SnapshotContext(player, Mode.STAFF));
+		}
+		
 		return true;
 	}
 	
@@ -274,7 +308,7 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 		
 		if (!tools.isEmpty())
 		{
-			StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
+			StaffModeProfile profile = plugin.staff().onlineStaffProfile(player);
 			ToggleSwitch toggle = profile.mode(Mode.STAFF);
 			
 			// Couldn't toggle...
@@ -303,8 +337,11 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 		
 		command = (command.startsWith("/")) ? command : "/" + command;
 		
-		TextChain.using(plugin).legacy().chain()
-			.then("Executing: &7&o" + command)
+		TextChain.using(plugin).chain()
+			.then("Executing: ")
+			.then(command)
+				.italic().color(NamedTextColor.GRAY)
+				.click(ClickEvent.copyToClipboard(command))
 			.sendToRecipient(player);
 		
 		player.chat(command);

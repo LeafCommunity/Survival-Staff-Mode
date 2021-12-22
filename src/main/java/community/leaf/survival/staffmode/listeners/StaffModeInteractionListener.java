@@ -45,7 +45,7 @@ public class StaffModeInteractionListener implements Listener
 		Player player = event.getPlayer();
 		if (!plugin.staff().isInStaffMode(player)) { return; }
 		
-		StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
+		StaffModeProfile profile = plugin.staff().onlineStaffProfile(player);
 		
 		GameMode former = player.getGameMode();
 		GameMode latter = event.getNewGameMode();

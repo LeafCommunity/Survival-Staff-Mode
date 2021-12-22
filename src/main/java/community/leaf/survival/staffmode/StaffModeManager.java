@@ -143,7 +143,7 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
 		return Optional.of(profile);
 	}
 	
-	public StaffModeProfile onlineStaffMemberProfile(Player player)
+	public StaffModeProfile onlineStaffProfile(Player player)
 	{
 		return existingPlayerProfile(player).orElseThrow(() ->
 			new IllegalArgumentException("Player is not a staff member and has no existing profile: " + player.getName())
