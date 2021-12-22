@@ -17,7 +17,9 @@ import community.leaf.survival.staffmode.listeners.StaffSessionListener;
 import community.leaf.survival.staffmode.snapshots.SnapshotRegistry;
 import community.leaf.tasks.Concurrency;
 import community.leaf.tasks.bukkit.BukkitTaskSource;
+import community.leaf.textchain.platforms.bukkit.BukkitTextChainSource;
 import io.papermc.lib.PaperLib;
+import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandExecutor;
@@ -30,7 +32,7 @@ import pl.tlinkowski.annotation.basic.NullOr;
 import java.nio.file.Path;
 import java.util.logging.Level;
 
-public final class StaffModePlugin extends JavaPlugin implements BukkitEventSource, BukkitTaskSource, StaffModeAPI
+public final class StaffModePlugin extends JavaPlugin implements BukkitEventSource, BukkitTaskSource, BukkitTextChainSource, StaffModeAPI
 {
 	public static final int BSTATS = 13608;
 	
@@ -40,6 +42,8 @@ public final class StaffModePlugin extends JavaPlugin implements BukkitEventSour
 	private final StaffModeConfig config;
 	private final SnapshotRegistry snapshots;
 	private final StaffModeManager staff;
+	
+	private @NullOr BukkitAudiences adventure;
 	
 	public StaffModePlugin()
 	{
@@ -54,8 +58,17 @@ public final class StaffModePlugin extends JavaPlugin implements BukkitEventSour
 		this.staff = new StaffModeManager(this);
 	}
 	
+	private <T> T initialized(@NullOr T thing)
+	{
+		if (thing != null) { return thing; }
+		throw new IllegalStateException();
+	}
+	
 	@Override
 	public Plugin plugin() { return this; }
+	
+	@Override
+	public BukkitAudiences adventure() { return initialized(adventure); }
 	
 	public Path directory() { return directory; }
 	
@@ -83,6 +96,8 @@ public final class StaffModePlugin extends JavaPlugin implements BukkitEventSour
 	@Override
 	public void onEnable()
 	{
+		this.adventure = BukkitAudiences.create(this);
+		
 		staff.loadDataFromDisk();
 		
 		events().register(new StaffCommandListener(this));
@@ -106,6 +121,12 @@ public final class StaffModePlugin extends JavaPlugin implements BukkitEventSour
 	@Override
 	public void onDisable()
 	{
+		if (this.adventure != null)
+		{
+			this.adventure.close();
+			this.adventure = null;
+		}
+		
 		staff.saveIfUpdated(Concurrency.SYNC);
 	}
 	
