@@ -180,25 +180,26 @@ public final class StaffModeProfile implements StaffMember
 	}
 	
 	@Override
-	public void mode(Mode mode)
+	public ToggleSwitch mode(Mode mode)
 	{
 		@NullOr Player player = player().orElse(null);
-		if (player == null) { return; }
+		if (player == null) { return ToggleSwitch.FAILURE; }
 		
 		Mode current = effectiveActiveMode(player);
-		if (mode == current) { return; }
+		if (mode == current) { return ToggleSwitch.ALREADY; }
 		
 		SnapshotContext context = new SnapshotContext(player, mode);
 		StaffModeToggleRequestEvent request = new StaffModeToggleRequestEvent(this, context);
 		
 		// Check whether player can toggle their staff mode (abort if cancelled)
-		if (Events.dispatcher().call(request).isCancelled()) { return; }
+		if (Events.dispatcher().call(request).isCancelled()) { return ToggleSwitch.FAILURE; }
 		
 		// Capture and save current gameplay state
 		forceCaptureSnapshot(new SnapshotContext(player, current));
 		
 		// Restore and apply snapshot from toggled mode
 		forceRestoreSnapshot(context);
+		return ToggleSwitch.SUCCESS;
 	}
 	
 	public boolean nightVision()

@@ -24,6 +24,11 @@ public interface StaffMember
 	
 	default Optional<Player> player() { return Optional.ofNullable(Bukkit.getPlayer(uuid())); }
 	
+	default Player online()
+	{
+		return player().orElseThrow(() -> new IllegalStateException("Player is not online."));
+	}
+	
 	Optional<Instant> sinceLastToggle();
 	
 	Optional<Mode> lastToggledMode();
@@ -34,5 +39,5 @@ public interface StaffMember
 	
 	Mode mode();
 	
-	void mode(Mode mode);
+	ToggleSwitch mode(Mode mode);
 }

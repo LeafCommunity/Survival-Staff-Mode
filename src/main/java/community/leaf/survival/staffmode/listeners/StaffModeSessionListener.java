@@ -39,18 +39,19 @@ public class StaffModeSessionListener implements Listener
 	{
 		this.plugin = plugin;
 		
-		// Check for demotions...
 		plugin.sync().every(1).seconds().run(() ->
-			plugin.getServer().getOnlinePlayers().forEach(this::checkForDemotion)
-		);
-		
-		// Replenish night vision...
-		plugin.sync().every(30).seconds().run(() ->
-			plugin.staff().streamOnlineStaffProfiles()
-				.filter(StaffModeProfile::nightVision)
-				.flatMap(profile -> profile.player().stream())
-				.forEach(NightVision::apply)
-		);
+		{
+			for (Player player : plugin.getServer().getOnlinePlayers())
+			{
+				// Check for demotions...
+				checkForDemotion(player);
+				if (!plugin.staff().isInStaffMode(player)) { continue; }
+				
+				StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
+				// Replenish night vision...
+				if (profile.nightVision()) { NightVision.apply(player); }
+			}
+		});
 		
 		// Capture snapshots and save data to disk
 		plugin.sync().every(2).minutes().run(() -> {

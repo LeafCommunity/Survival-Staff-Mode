@@ -19,7 +19,7 @@ public class NightVision
 	private NightVision() {}
 	
 	public static final PotionEffect EFFECT =
-		PotionEffectType.NIGHT_VISION.createEffect(Ticks.fromInteger(30, TimeUnit.MINUTES), 3);
+		new PotionEffect(PotionEffectType.NIGHT_VISION, Ticks.fromInteger(30, TimeUnit.MINUTES), 3, false, false, false);
 	
 	public static void apply(Player player) { player.addPotionEffect(EFFECT); }
 	

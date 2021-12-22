@@ -15,6 +15,7 @@ import community.leaf.survival.staffmode.Permissions;
 import community.leaf.survival.staffmode.StaffMember;
 import community.leaf.survival.staffmode.StaffModePlugin;
 import community.leaf.survival.staffmode.StaffModeProfile;
+import community.leaf.survival.staffmode.ToggleSwitch;
 import community.leaf.survival.staffmode.util.NightVision;
 import community.leaf.textchain.adventure.TextChain;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -36,6 +37,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class StaffModeCommand implements CommandExecutor, TabCompleter
@@ -245,7 +247,7 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 	{
 		if (!(sender instanceof Player player)) { return error(sender, "Only players may use this command"); }
 		
-		Map<String, Consumer<Player>> tools = new LinkedHashMap<>();
+		Map<String, BiConsumer<StaffModeProfile, Boolean>> tools = new LinkedHashMap<>();
 		List<String> unknown = new ArrayList<>();
 		
 		for (String arg : args)
@@ -258,7 +260,16 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 			else { unknown.add(arg); }
 		}
 		
-		tools.values().forEach(tool -> tool.accept(player));
+		if (!tools.isEmpty())
+		{
+			StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
+			ToggleSwitch toggle = profile.mode(Mode.STAFF);
+			
+			// Couldn't toggle...
+			if (toggle == ToggleSwitch.FAILURE) { return true; }
+			
+			tools.values().forEach(tool -> tool.accept(profile, toggle == ToggleSwitch.SUCCESS));
+		}
 		
 		if (!unknown.isEmpty())
 		{
@@ -268,20 +279,11 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 		return true;
 	}
 	
-	private boolean cannotBePutIntoStaffMode(StaffMember member)
+	private void nightVision(StaffModeProfile profile, boolean enabledStaffMode)
 	{
-		if (member.mode() == Mode.STAFF) { return false; }
+		Player player = profile.online();
+		boolean toggle = enabledStaffMode || !profile.nightVision();
 		
-		member.mode(Mode.STAFF);
-		return member.mode() != Mode.STAFF;
-	}
-	
-	private void nightVision(Player player)
-	{
-		StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
-		if (cannotBePutIntoStaffMode(profile)) { return; }
-		
-		boolean toggle = !profile.nightVision();
 		profile.nightVision(toggle);
 		
 		if (toggle)
@@ -302,20 +304,12 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 		}
 	}
 	
-	private void spectator(Player player)
+	private void spectator(StaffModeProfile profile, boolean enabledStaffMode)
 	{
-		StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
-		if (cannotBePutIntoStaffMode(profile)) { return; }
+		Player player = profile.online();
+		boolean spectator = enabledStaffMode || player.getGameMode() != GameMode.SPECTATOR;
 		
-		if (profile.spectator() && player.getGameMode() == GameMode.SPECTATOR)
-		{
-			player.setGameMode(profile.gameModePriorToSpectator());
-			
-			TextChain.using(plugin).legacy().chain()
-				.then("&oDisabled spectator mode.")
-				.sendToRecipient(player);
-		}
-		else
+		if (spectator)
 		{
 			player.setGameMode(GameMode.SPECTATOR);
 			
@@ -323,13 +317,19 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 				.then("&oEnabled spectator mode.")
 				.sendToRecipient(player);
 		}
+		else
+		{
+			player.setGameMode(profile.gameModePriorToSpectator());
+			
+			TextChain.using(plugin).legacy().chain()
+				.then("&oDisabled spectator mode.")
+				.sendToRecipient(player);
+		}
 	}
 	
-	private void fly(Player player)
+	private void fly(StaffModeProfile profile, boolean enabledStaffMode)
 	{
-		StaffModeProfile profile = plugin.staff().onlineStaffMemberProfile(player);
-		if (cannotBePutIntoStaffMode(profile)) { return; }
-		
+		Player player = profile.online();
 		player.setAllowFlight(true);
 		player.setFlying(true);
 	}
