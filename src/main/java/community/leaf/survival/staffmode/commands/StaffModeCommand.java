@@ -164,7 +164,18 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
 		{
 			String choice = args[0].toLowerCase(Locale.ROOT);
 			
-			if (STAFF_TOOLS.contains(choice))
+			if (STAFF_CHECK.contains(choice))
+			{
+				if (args.length <= 2)
+				{
+					plugin.getServer().getOnlinePlayers().stream().map(Player::getName).forEach(suggestions::add);
+				}
+				else
+				{
+					suggestions.add("<No more arguments>");
+				}
+			}
+			else if (STAFF_TOOLS.contains(choice))
 			{
 				// Search for 'run' tool suggestions
 				for (int i = 0; i < args.length; i++)
