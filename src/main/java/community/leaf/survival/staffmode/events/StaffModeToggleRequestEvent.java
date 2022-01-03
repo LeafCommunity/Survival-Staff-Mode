@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021, RezzedUp <https://github.com/LeafCommunity/Survival-Staff-Mode>
+ * Copyright © 2021-2022, RezzedUp <https://github.com/LeafCommunity/Survival-Staff-Mode>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,12 +14,12 @@ import org.bukkit.event.HandlerList;
 
 public class StaffModeToggleRequestEvent extends AbstractStaffModeToggleEvent implements Cancellable
 {
-	public StaffModeToggleRequestEvent(StaffMember member, SnapshotContext context)
-	{
-		super(member, context);
-	}
-	
-	// - - - - - - Cancellable Boilerplate - - - - - -
+    public StaffModeToggleRequestEvent(StaffMember member, SnapshotContext context)
+    {
+        super(member, context);
+    }
+    
+    // - - - - - - Cancellable Boilerplate - - - - - -
     
     private boolean cancelled = false;
     

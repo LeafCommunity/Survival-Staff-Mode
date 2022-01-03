@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021, RezzedUp <https://github.com/LeafCommunity/Survival-Staff-Mode>
+ * Copyright © 2021-2022, RezzedUp <https://github.com/LeafCommunity/Survival-Staff-Mode>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,56 +21,56 @@ import java.util.Optional;
 
 public record FlightSnapshot(boolean isAllowed, boolean isFlying) implements Snapshot
 {
-	private static final YamlValue<Boolean> ALLOWED = YamlValue.ofBoolean("allowed").maybe();
-	
-	private static final YamlValue<Boolean> FLYING = YamlValue.ofBoolean("flying").maybe();
-	
-	public static final SnapshotSource<FlightSnapshot> SOURCE =
-		new SnapshotSource<>()
-		{
-			@Override
-			public boolean isApplicable(SnapshotContext context) { return context.mode() == Mode.SURVIVAL; }
-			
-			@Override
-			public FlightSnapshot capture(SnapshotContext context) { return of(context.player()); }
-			
-			@Override
-			public Optional<FlightSnapshot> get(ConfigurationSection storage, String key)
-			{
-				return Sections.get(storage, key).map(data ->
-				{
-					boolean isAllowed = ALLOWED.get(data).orElse(false);
-					boolean isFlying = FLYING.get(data).orElse(false);
-					
-					return new FlightSnapshot(isAllowed, isFlying);
-				});
-			}
-			
-			@Override
-			public void set(ConfigurationSection storage, String key, @NullOr FlightSnapshot updated)
-			{
-				if (updated == null)
-				{
-					storage.set(key, null);
-					return;
-				}
-				
-				ConfigurationSection data = Sections.getOrCreate(storage, key);
-				
-				ALLOWED.set(data, updated.isAllowed);
-				FLYING.set(data, updated.isFlying);
-			}
-		};
-	
-	public static FlightSnapshot of(Player player)
-	{
-		return new FlightSnapshot(player.getAllowFlight(), player.isFlying());
-	}
-	
-	@Override
-	public void apply(SnapshotContext context)
-	{
-		context.player().setAllowFlight(isAllowed);
-		context.player().setFlying(isFlying);
-	}
+    private static final YamlValue<Boolean> ALLOWED = YamlValue.ofBoolean("allowed").maybe();
+    
+    private static final YamlValue<Boolean> FLYING = YamlValue.ofBoolean("flying").maybe();
+    
+    public static final SnapshotSource<FlightSnapshot> SOURCE =
+        new SnapshotSource<>()
+        {
+            @Override
+            public boolean isApplicable(SnapshotContext context) { return context.mode() == Mode.SURVIVAL; }
+            
+            @Override
+            public FlightSnapshot capture(SnapshotContext context) { return of(context.player()); }
+            
+            @Override
+            public Optional<FlightSnapshot> get(ConfigurationSection storage, String key)
+            {
+                return Sections.get(storage, key).map(data ->
+                {
+                    boolean isAllowed = ALLOWED.get(data).orElse(false);
+                    boolean isFlying = FLYING.get(data).orElse(false);
+                    
+                    return new FlightSnapshot(isAllowed, isFlying);
+                });
+            }
+            
+            @Override
+            public void set(ConfigurationSection storage, String key, @NullOr FlightSnapshot updated)
+            {
+                if (updated == null)
+                {
+                    storage.set(key, null);
+                    return;
+                }
+                
+                ConfigurationSection data = Sections.getOrCreate(storage, key);
+                
+                ALLOWED.set(data, updated.isAllowed);
+                FLYING.set(data, updated.isFlying);
+            }
+        };
+    
+    public static FlightSnapshot of(Player player)
+    {
+        return new FlightSnapshot(player.getAllowFlight(), player.isFlying());
+    }
+    
+    @Override
+    public void apply(SnapshotContext context)
+    {
+        context.player().setAllowFlight(isAllowed);
+        context.player().setFlying(isFlying);
+    }
 }

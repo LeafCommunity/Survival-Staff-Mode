@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021, RezzedUp <https://github.com/LeafCommunity/Survival-Staff-Mode>
+ * Copyright © 2021-2022, RezzedUp <https://github.com/LeafCommunity/Survival-Staff-Mode>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,35 +22,35 @@ import java.util.regex.Pattern;
 
 public class StaffCommandListener implements Listener
 {
-	private static final Pattern EASTER_EGG_ALIAS = Pattern.compile("(?i)(smh[-_]?my[-_]?head|smo{2,}thment)");
-	
-	private final StaffModePlugin plugin;
-	
-	public StaffCommandListener(StaffModePlugin plugin)
-	{
-		this.plugin = plugin;
-	}
-	
-	private static String reconstruct(String command, List<String> args)
-	{
-		return "/" + ((args.isEmpty()) ? command : command + " " + String.join(" ", args));
-	}
-	
-	@EventListener(ListenerOrder.FIRST)
-	@CancelledEvents(CancellationPolicy.REJECT)
-	public void onCommand(PlayerCommandPreprocessEvent event)
-	{
-		Player player = event.getPlayer();
-		boolean isStaffMember = Permissions.STAFF_MEMBER.allows(player);
-		
-		List<String> parts = List.of(event.getMessage().split("\s+"));
-		String command = parts.get(0).replaceFirst("/", "");
-		List<String> args = (parts.size() > 1) ? parts.subList(1, parts.size()) : List.of();
-		
-		if (isStaffMember && EASTER_EGG_ALIAS.matcher(command).matches())
-		{
-			event.setMessage(reconstruct("staffmode", args));
-			return;
-		}
-	}
+    private static final Pattern EASTER_EGG_ALIAS = Pattern.compile("(?i)(smh[-_]?my[-_]?head|smo{2,}thment)");
+    
+    private final StaffModePlugin plugin;
+    
+    public StaffCommandListener(StaffModePlugin plugin)
+    {
+        this.plugin = plugin;
+    }
+    
+    private static String reconstruct(String command, List<String> args)
+    {
+        return "/" + ((args.isEmpty()) ? command : command + " " + String.join(" ", args));
+    }
+    
+    @EventListener(ListenerOrder.FIRST)
+    @CancelledEvents(CancellationPolicy.REJECT)
+    public void onCommand(PlayerCommandPreprocessEvent event)
+    {
+        Player player = event.getPlayer();
+        boolean isStaffMember = Permissions.STAFF_MEMBER.allows(player);
+        
+        List<String> parts = List.of(event.getMessage().split("\s+"));
+        String command = parts.get(0).replaceFirst("/", "");
+        List<String> args = (parts.size() > 1) ? parts.subList(1, parts.size()) : List.of();
+        
+        if (isStaffMember && EASTER_EGG_ALIAS.matcher(command).matches())
+        {
+            event.setMessage(reconstruct("staffmode", args));
+            return;
+        }
+    }
 }

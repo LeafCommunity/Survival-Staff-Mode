@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021, RezzedUp <https://github.com/LeafCommunity/Survival-Staff-Mode>
+ * Copyright © 2021-2022, RezzedUp <https://github.com/LeafCommunity/Survival-Staff-Mode>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -34,108 +34,108 @@ import java.util.logging.Level;
 
 public final class StaffModePlugin extends JavaPlugin implements BukkitEventSource, BukkitTaskSource, BukkitTextChainSource, StaffModeAPI
 {
-	public static final int BSTATS = 13608;
-	
-	private final Path directory;
-	private final Path backups;
-	private final Version version;
-	private final StaffModeConfig config;
-	private final SnapshotRegistry snapshots;
-	private final StaffModeManager staff;
-	
-	private @NullOr BukkitAudiences adventure;
-	
-	public StaffModePlugin()
-	{
-		this.directory = getDataFolder().toPath();
-		this.backups = directory.resolve("backups");
-		this.version = Version.valueOf(getDescription().getVersion());
-		
-		getLogger().info("Initializing " + getName() + " v" + version);
-		
-		this.config = new StaffModeConfig(this);
-		this.snapshots = new SnapshotRegistry(this);
-		this.staff = new StaffModeManager(this);
-	}
-	
-	private <T> T initialized(@NullOr T thing)
-	{
-		if (thing != null) { return thing; }
-		throw new IllegalStateException();
-	}
-	
-	@Override
-	public Plugin plugin() { return this; }
-	
-	@Override
-	public BukkitAudiences adventure() { return initialized(adventure); }
-	
-	public Path directory() { return directory; }
-	
-	public Path backups() { return backups; }
-	
-	@Override
-	public Version version() { return version; }
-	
-	public StaffModeConfig config() { return config; }
-	
-	public NamespacedKey key(String key) { return new NamespacedKey(this, key); }
-	
-	@Override
-	public SnapshotRegistry snapshots() { return snapshots; }
-	
-	@Override
-	public StaffModeManager staff() { return staff; }
-	
-	@Override
-	public void onLoad()
-	{
-		PaperLib.suggestPaper(this, Level.WARNING);
-	}
-	
-	@Override
-	public void onEnable()
-	{
-		this.adventure = BukkitAudiences.create(this);
-		
-		staff.loadDataFromDisk();
-		
-		events().register(new StaffCommandListener(this));
-		events().register(new StaffModeInteractionListener(this));
-		events().register(new StaffModeSessionListener(this));
-		
-		if (PaperLib.isPaper())
-		{
-			events().register(new StaffModeInteractionListener.Paper(this));
-		}
-		
-		command("staffmode", new StaffModeCommand(this));
-		
-		if (config.getOrDefault(StaffModeConfig.METRICS_ENABLED))
-		{
-			Metrics metrics = new Metrics(this, BSTATS);
-			// TODO: add more charts
-		}
-	}
-	
-	@Override
-	public void onDisable()
-	{
-		if (this.adventure != null)
-		{
-			this.adventure.close();
-			this.adventure = null;
-		}
-		
-		staff.saveIfUpdated(Concurrency.SYNC);
-	}
-	
-	private void command(String name, CommandExecutor executor)
-	{
-		@NullOr PluginCommand command = getCommand(name);
-		if (command == null) { throw new IllegalArgumentException("Undefined command: " + name); }
-		
-		command.setExecutor(executor);
-		if (executor instanceof TabCompleter tab) { command.setTabCompleter(tab); }
-	}
+    public static final int BSTATS = 13608;
+    
+    private final Path directory;
+    private final Path backups;
+    private final Version version;
+    private final StaffModeConfig config;
+    private final SnapshotRegistry snapshots;
+    private final StaffModeManager staff;
+    
+    private @NullOr BukkitAudiences adventure;
+    
+    public StaffModePlugin()
+    {
+        this.directory = getDataFolder().toPath();
+        this.backups = directory.resolve("backups");
+        this.version = Version.valueOf(getDescription().getVersion());
+        
+        getLogger().info("Initializing " + getName() + " v" + version);
+        
+        this.config = new StaffModeConfig(this);
+        this.snapshots = new SnapshotRegistry(this);
+        this.staff = new StaffModeManager(this);
+    }
+    
+    private <T> T initialized(@NullOr T thing)
+    {
+        if (thing != null) { return thing; }
+        throw new IllegalStateException();
+    }
+    
+    @Override
+    public Plugin plugin() { return this; }
+    
+    @Override
+    public BukkitAudiences adventure() { return initialized(adventure); }
+    
+    public Path directory() { return directory; }
+    
+    public Path backups() { return backups; }
+    
+    @Override
+    public Version version() { return version; }
+    
+    public StaffModeConfig config() { return config; }
+    
+    public NamespacedKey key(String key) { return new NamespacedKey(this, key); }
+    
+    @Override
+    public SnapshotRegistry snapshots() { return snapshots; }
+    
+    @Override
+    public StaffModeManager staff() { return staff; }
+    
+    @Override
+    public void onLoad()
+    {
+        PaperLib.suggestPaper(this, Level.WARNING);
+    }
+    
+    @Override
+    public void onEnable()
+    {
+        this.adventure = BukkitAudiences.create(this);
+        
+        staff.loadDataFromDisk();
+        
+        events().register(new StaffCommandListener(this));
+        events().register(new StaffModeInteractionListener(this));
+        events().register(new StaffModeSessionListener(this));
+        
+        if (PaperLib.isPaper())
+        {
+            events().register(new StaffModeInteractionListener.Paper(this));
+        }
+        
+        command("staffmode", new StaffModeCommand(this));
+        
+        if (config.getOrDefault(StaffModeConfig.METRICS_ENABLED))
+        {
+            Metrics metrics = new Metrics(this, BSTATS);
+            // TODO: add more charts
+        }
+    }
+    
+    @Override
+    public void onDisable()
+    {
+        if (this.adventure != null)
+        {
+            this.adventure.close();
+            this.adventure = null;
+        }
+        
+        staff.saveIfUpdated(Concurrency.SYNC);
+    }
+    
+    private void command(String name, CommandExecutor executor)
+    {
+        @NullOr PluginCommand command = getCommand(name);
+        if (command == null) { throw new IllegalArgumentException("Undefined command: " + name); }
+        
+        command.setExecutor(executor);
+        if (executor instanceof TabCompleter tab) { command.setTabCompleter(tab); }
+    }
 }

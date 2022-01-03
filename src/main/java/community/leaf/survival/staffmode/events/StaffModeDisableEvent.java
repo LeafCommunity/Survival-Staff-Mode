@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021, RezzedUp <https://github.com/LeafCommunity/Survival-Staff-Mode>
+ * Copyright © 2021-2022, RezzedUp <https://github.com/LeafCommunity/Survival-Staff-Mode>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,17 +14,17 @@ import org.bukkit.event.HandlerList;
 
 public class StaffModeDisableEvent extends AbstractStaffModeToggleEvent
 {
-	public StaffModeDisableEvent(StaffMember member, SnapshotContext context)
-	{
-		super(member, context);
-		
-		if (context.mode() != Mode.SURVIVAL)
-		{
-			throw new IllegalArgumentException("Mode must be " + Mode.SURVIVAL);
-		}
-	}
-	
-	// - - - - - - HandlerList Boilerplate - - - - - -
+    public StaffModeDisableEvent(StaffMember member, SnapshotContext context)
+    {
+        super(member, context);
+        
+        if (context.mode() != Mode.SURVIVAL)
+        {
+            throw new IllegalArgumentException("Mode must be " + Mode.SURVIVAL);
+        }
+    }
+    
+    // - - - - - - HandlerList Boilerplate - - - - - -
     
     private static final HandlerList HANDLERS = new HandlerList();
     

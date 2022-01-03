@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021, RezzedUp <https://github.com/LeafCommunity/Survival-Staff-Mode>
+ * Copyright © 2021-2022, RezzedUp <https://github.com/LeafCommunity/Survival-Staff-Mode>
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,26 +18,26 @@ import java.util.UUID;
 
 public interface StaffMember
 {
-	UUID uuid();
-	
-	default OfflinePlayer offlinePlayer() { return Bukkit.getOfflinePlayer(uuid()); }
-	
-	default Optional<Player> player() { return Optional.ofNullable(Bukkit.getPlayer(uuid())); }
-	
-	default Player online()
-	{
-		return player().orElseThrow(() -> new IllegalStateException("Player is not online."));
-	}
-	
-	Optional<Instant> sinceLastToggle();
-	
-	Optional<Mode> lastToggledMode();
-	
-	Optional<GameplaySnapshot> capture();
-	
-	Optional<GameplaySnapshot> snapshot(Mode mode);
-	
-	Mode mode();
-	
-	ToggleSwitch mode(Mode mode);
+    UUID uuid();
+    
+    default OfflinePlayer offlinePlayer() { return Bukkit.getOfflinePlayer(uuid()); }
+    
+    default Optional<Player> player() { return Optional.ofNullable(Bukkit.getPlayer(uuid())); }
+    
+    default Player online()
+    {
+        return player().orElseThrow(() -> new IllegalStateException("Player is not online."));
+    }
+    
+    Optional<Instant> sinceLastToggle();
+    
+    Optional<Mode> lastToggledMode();
+    
+    Optional<GameplaySnapshot> capture();
+    
+    Optional<GameplaySnapshot> snapshot(Mode mode);
+    
+    Mode mode();
+    
+    ToggleSwitch mode(Mode mode);
 }
