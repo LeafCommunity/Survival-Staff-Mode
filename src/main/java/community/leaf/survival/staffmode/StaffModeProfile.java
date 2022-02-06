@@ -231,7 +231,7 @@ public final class StaffModeProfile implements StaffMember
     public GameMode gameModePriorToSpectator()
     {
         return SPECTATOR_SETTING.get(profileDataSection())
-            .flatMap(str -> Attempt.ignoring(() -> GameMode.valueOf(str)))
+            .flatMap(str -> Attempt.ignoring().get(() -> GameMode.valueOf(str)))
             .filter(mode -> mode != GameMode.SPECTATOR)
             .orElse(GameMode.SURVIVAL);
     }

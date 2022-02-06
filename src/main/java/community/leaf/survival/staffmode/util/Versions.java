@@ -22,7 +22,7 @@ public class Versions
     
     public static final YamlAccessor<Version> YAML =
         YamlAccessor.of(Adapter.of(
-            object -> Attempt.ignoring(() -> Version.valueOf(String.valueOf(object))),
+            object -> Attempt.ignoring().get(() -> Version.valueOf(String.valueOf(object))),
             version -> Optional.of(String.valueOf(version))
         ));
 }

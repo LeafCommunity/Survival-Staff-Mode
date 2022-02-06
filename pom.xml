@@ -98,7 +98,7 @@
     <dependency>
       <groupId>org.bstats</groupId>
       <artifactId>bstats-bukkit</artifactId>
-      <version>2.2.1</version>
+      <version>3.0.0</version>
     </dependency>
     <!-- Kyori Adventure Bukkit Platform (via maven-central) -->
     <dependency>
@@ -147,7 +147,7 @@
     <dependency>
       <groupId>com.rezzedup.util</groupId>
       <artifactId>exceptional</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.0-rc.1</version>
     </dependency>
     
     <!-- ~ ~ ~ -->
