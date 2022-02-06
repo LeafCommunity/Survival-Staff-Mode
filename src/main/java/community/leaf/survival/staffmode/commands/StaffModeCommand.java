@@ -300,8 +300,14 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
     {
         if (!(sender instanceof Player player)) { return error(sender, "Only players may use this command"); }
         
+        @FunctionalInterface
+        interface Tool
+        {
+            void execute(StaffModeProfile profile, boolean enabledStaffMode);
+        }
+        
         // Only apply tools once (avoids /staffmode spec spec spec spec, etc.)
-        Map<String, BiConsumer<StaffModeProfile, Boolean>> tools = new LinkedHashMap<>();
+        Map<String, Tool> tools = new LinkedHashMap<>();
         List<String> unknown = new ArrayList<>();
         
         for (int i = 0; i < args.length; i++)
@@ -329,7 +335,7 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
             // Couldn't toggle...
             if (toggle == ToggleSwitch.FAILURE) { return true; }
             
-            tools.values().forEach(tool -> tool.accept(profile, toggle == ToggleSwitch.SUCCESS));
+            tools.values().forEach(tool -> tool.execute(profile, toggle == ToggleSwitch.SUCCESS));
         }
         
         if (!unknown.isEmpty())

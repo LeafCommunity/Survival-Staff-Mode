@@ -49,7 +49,7 @@ public record PotionEffectsSnapshot(List<PotionEffect> effects) implements Snaps
                 
                 return (data.isEmpty())
                     ? Optional.of(EMPTY)
-                       : Optional.of(new PotionEffectsSnapshot(
+                    : Optional.of(new PotionEffectsSnapshot(
                         data.stream()
                             .map(map -> (Map<String, Object>) map)
                             .map(POTION_EFFECT::deserialize)
