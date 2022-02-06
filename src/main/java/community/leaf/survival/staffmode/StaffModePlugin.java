@@ -32,7 +32,8 @@ import pl.tlinkowski.annotation.basic.NullOr;
 import java.nio.file.Path;
 import java.util.logging.Level;
 
-public final class StaffModePlugin extends JavaPlugin implements BukkitEventSource, BukkitTaskSource, BukkitTextChainSource, StaffModeAPI
+public final class StaffModePlugin extends JavaPlugin
+    implements BukkitEventSource, BukkitTaskSource, BukkitTextChainSource, StaffModeAPI
 {
     public static final int BSTATS = 13608;
     
@@ -96,9 +97,12 @@ public final class StaffModePlugin extends JavaPlugin implements BukkitEventSour
     @Override
     public void onEnable()
     {
+        getLogger().info("Starting " + getName() + " v" + version);
+        
         this.adventure = BukkitAudiences.create(this);
         
-        staff.loadDataFromDisk();
+        config.reload();
+        staff.reload();
         
         events().register(new StaffCommandListener(this));
         events().register(new StaffModeInteractionListener(this));

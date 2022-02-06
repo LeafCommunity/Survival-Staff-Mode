@@ -8,6 +8,7 @@
 package community.leaf.survival.staffmode;
 
 import com.rezzedup.util.valuables.Adapter;
+import community.leaf.configvalues.bukkit.data.Load;
 import community.leaf.configvalues.bukkit.data.YamlDataFile;
 import community.leaf.configvalues.bukkit.util.Sections;
 import community.leaf.survival.staffmode.snapshots.GameplaySnapshot;
@@ -40,7 +41,7 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
     
     StaffModeManager(StaffModePlugin plugin)
     {
-        super(plugin.directory().resolve("data"), "staff-mode.data.yml");
+        super(plugin.directory().resolve("data"), "staff-mode.data.yml", Load.LATER);
         
         this.plugin = plugin;
         this.snapshot = GameplaySnapshot.source(plugin.snapshots());
@@ -59,13 +60,11 @@ public final class StaffModeManager extends YamlDataFile implements StaffManager
                 return Sections.getOrCreate(profilesDataSection(), uuid.toString());
             }
         };
-    }
-    
-    void loadDataFromDisk()
-    {
+        
         reloadsWith(() ->
         {
-            Logger logger = plugin.getLogger();;
+            Logger logger = plugin.getLogger();
+            logger.info("Loading staff mode data...");
             
             if (isInvalid())
             {

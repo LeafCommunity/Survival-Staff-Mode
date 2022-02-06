@@ -16,7 +16,7 @@
   <licenses>
     <license>
       <name>Mozilla Public License Version 2.0</name>
-      <url>http://mozilla.org/MPL/2.0</url>
+      <url>https://mozilla.org/MPL/2.0</url>
     </license>
   </licenses>
   
@@ -30,7 +30,7 @@
   <scm>
     <connection>scm:git:git://github.com/LeafCommunity/Survival-Staff-Mode.git</connection>
     <developerConnection>scm:git:ssh://github.com:LeafCommunity/Survival-Staff-Mode.git</developerConnection>
-    <url>http://github.com/LeafCommunity/Survival-Staff-Mode</url>
+    <url>https://github.com/LeafCommunity/Survival-Staff-Mode</url>
   </scm>
   
   <issueManagement>
@@ -117,7 +117,7 @@
     <dependency>
       <groupId>community.leaf.configvalues</groupId>
       <artifactId>config-values-bukkit</artifactId>
-      <version>0.0.4</version>
+      <version>0.0.7</version>
     </dependency>
     <!-- LeafCommunity Eventful (via jitpack.io) -->
     <dependency>
@@ -135,7 +135,7 @@
     <dependency>
       <groupId>community.leaf.textchain</groupId>
       <artifactId>textchain-platform-bukkit</artifactId>
-      <version>fb6949ad0b</version>
+      <version>226ba5ce4a</version>
     </dependency>
     <!-- PaperLib (via papermc) -->
     <dependency>

@@ -8,8 +8,8 @@
 package community.leaf.survival.staffmode.commands;
 
 import com.rezzedup.util.constants.Aggregates;
+import com.rezzedup.util.constants.MatchRules;
 import com.rezzedup.util.constants.annotations.AggregatedResult;
-import com.rezzedup.util.constants.types.TypeCapture;
 import community.leaf.survival.staffmode.Mode;
 import community.leaf.survival.staffmode.Permissions;
 import community.leaf.survival.staffmode.StaffModePlugin;
@@ -52,11 +52,12 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
     
     @AggregatedResult
     public static final Set<String> STAFF_TOGGLES =
-        Aggregates.set(
-            StaffModeCommand.class,
-            TypeCapture.type(String.class),
-            Aggregates.matching().all("TOGGLE").collections(true)
-        );
+        Aggregates.fromThisClass()
+            .constantsOfType(String.class)
+            .matching(
+                MatchRules.of().all("TOGGLE").collections(true)
+            )
+            .toSet();
     
     public static final Set<String> STAFF_CHECK = Set.of("check");
     
@@ -72,11 +73,12 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
     
     @AggregatedResult
     public static final Set<String> STAFF_TOOLS =
-        Aggregates.set(
-            StaffModeCommand.class,
-            TypeCapture.type(String.class),
-            Aggregates.matching().all("TOOL").collections(true)
-        );
+        Aggregates.fromThisClass()
+            .constantsOfType(String.class)
+            .matching(
+                MatchRules.of().all("TOOL").collections(true)
+            )
+            .toSet();
     
     // Managerial Commands
     public static final Set<String> ADMIN_RELOAD = Set.of("reload");
@@ -88,19 +90,21 @@ public class StaffModeCommand implements CommandExecutor, TabCompleter
     
     @AggregatedResult
     public static final Set<String> ALL_STAFF_ARGUMENTS =
-        Aggregates.set(
-            StaffModeCommand.class,
-            TypeCapture.type(String.class),
-            Aggregates.matching().all("STAFF").not("ADMIN").collections(true)
-        );
+        Aggregates.fromThisClass()
+            .constantsOfType(String.class)
+            .matching(
+                MatchRules.of().all("STAFF").not("ADMIN").collections(true)
+            )
+            .toSet();
     
     @AggregatedResult
     public static final Set<String> ALL_ADMIN_ARGUMENTS =
-        Aggregates.set(
-            StaffModeCommand.class,
-            TypeCapture.type(String.class),
-            Aggregates.matching().all().collections(true)
-        );
+        Aggregates.fromThisClass()
+            .constantsOfType(String.class)
+            .matching(
+                MatchRules.of().all().collections(true)
+            )
+            .toSet();
     
     private static final Field COMMAND_MAP_FIELD;
     

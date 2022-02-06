@@ -12,6 +12,7 @@ import com.rezzedup.util.constants.Aggregates;
 import com.rezzedup.util.constants.annotations.AggregatedResult;
 import community.leaf.configvalues.bukkit.DefaultYamlValue;
 import community.leaf.configvalues.bukkit.YamlValue;
+import community.leaf.configvalues.bukkit.data.Load;
 import community.leaf.configvalues.bukkit.data.YamlDataFile;
 import community.leaf.survival.staffmode.StaffModePlugin;
 import community.leaf.survival.staffmode.util.Versions;
@@ -27,14 +28,17 @@ public class StaffModeConfig extends YamlDataFile
         YamlValue.ofBoolean("plugin.metrics").defaults(true);
     
     @AggregatedResult
-    public static final List<YamlValue<?>> VALUES = Aggregates.list(StaffModeConfig.class, YamlValue.type());
+    public static final List<YamlValue<?>> VALUES =
+        Aggregates.fromThisClass().constantsOfType(YamlValue.type()).toList();
     
     public StaffModeConfig(StaffModePlugin plugin)
     {
-        super(plugin.directory(), "staff-mode.config.yml");
+        super(plugin.directory(), "staff-mode.config.yml", Load.LATER);
         
         reloadsWith(() ->
         {
+            plugin.getLogger().info("Loading config...");
+            
             if (isInvalid()) { return; }
             
             Version existing = get(VERSION).orElse(Versions.ZERO);
